@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.HashMap;
 
 public class FileIO {
+    /** record the storage directory */
+    private static String storageDir = "~/.dedupStore";
+
     /** record where all the chunks are saved */
     private static String chunksDir = "./chunks";
 
