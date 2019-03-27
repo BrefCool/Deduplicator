@@ -1,0 +1,106 @@
+#!/bin/sh
+# POSIX
+
+die() {
+    printf '%s\n' "$1" >&2
+    exit 1
+}
+
+# Initialize all the option variables.
+# This ensures we are not contaminated by variables from the environment.
+addfilename=""
+retfilename=""
+lockername=""
+output=""
+jarpath="$(dirname $(readlink -f $0))/deduplicator.jar"
+
+while :; do
+    case $1 in
+        -addFile)
+            if [ "$2" ]; then
+            	if [ -n "${retfilename}" ]; then
+            		die 'ERROR: "-retrieveFile" and "-addFile" cannot be used as the same time!'
+            	fi
+            	addfilename=$2
+            	shift
+            else
+            	die 'ERROR: "-addFile" requires a non-empty option argument'
+            fi
+            ;;
+        -addFile=?*)
+            file=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        -addFile=)         # Handle the case of an empty --file=
+            die 'ERROR: "-addFile" requires a non-empty option argument.'
+            ;;
+        -retrieveFile)
+            if [ "$2" ]; then
+            	if [ -n "${addfilename}" ]; then
+            		die 'ERROR: "-retrieveFile" and "-addFile" cannot be used as the same time!'
+            	fi
+            	retfilename=$2
+            	shift
+            else
+            	die 'ERROR: "-retrieveFile" requires a non-empty option argument'
+            fi
+            ;;
+        -retrieveFile=?*)
+            file=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        -retrieveFile=)         # Handle the case of an empty --file=
+            die 'ERROR: "-retrieveFile" requires a non-empty option argument.'
+            ;;
+        -output)
+            if [ "$2" ]; then
+            	output=$2
+            	shift
+            else
+            	die 'ERROR: "-output" requires a non-empty option argument'
+            fi
+            ;;
+        -locker)
+            if [ "$2" ]; then
+            	lockername=$2
+            	shift
+            else
+            	die 'ERROR: "-locker" requires a non-empty option argument'
+            fi
+            ;;
+        --)              # End of all options.
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)               # Default case: No more options, so break out of the loop.
+            break
+    esac
+
+    shift
+done
+
+if [ -n "${addfilename}" ];
+then
+	if [ -n "${lockername}" ];
+	then
+		java -jar $jarpath -addFile $addfilename -locker $lockername
+	else
+		java -jar $jarpath -addFile $addfilename
+	fi
+elif [ -n "${retfilename}" ]; 
+then
+	if [ -n "${lockername}" ];
+	then
+		if [ -n "${output}" ]; 
+		then
+			java -jar $jarpath -retrieveFile $retfilename -output $output -locker $lockername
+		else
+			java -jar $jarpath -retrieveFile $retfilename -locker $lockername
+		fi
+	else
+		die 'ERROR: must include locker name when retrieveing the file'
+	fi
+else
+	die 'ERROR: unknown option'
+fi

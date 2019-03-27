@@ -68,13 +68,17 @@ public class Locker {
     }
 
     /** add new file to this locker */
-    public void addFile(String filename) {
+    public void addFile(String filepath) {
+        File file = new File(filepath);
 
         /** check file exists */
-        if (!new File(filename).exists()) {
+        if (!file.exists()) {
             System.out.println("file does not exists");
             return;
         }
+
+        /** extract file name */
+        String filename = file.getName();
 
         /** set file metadata */
         if (containsFile(filename)) {
@@ -88,7 +92,7 @@ public class Locker {
         /** contruct FileInputStream */
         FileInputStream fis = null;
         try {
-            fis = new FileInputStream(filename);
+            fis = new FileInputStream(filepath);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
