@@ -17,10 +17,10 @@ if __name__ == "__main__":
     if os.path.exists("./Testfiles"):
         shutil.rmtree("./Testfiles")
         os.mkdir("./Testfiles")
-    if os.path.exists("./chunks"):
-        shutil.rmtree("./chunks")
-    if os.path.exists("./lockers"):
-        shutil.rmtree("./lockers")
+    if os.path.exists(os.getenv("HOME") + "/.dedupStore/chunks"):
+        shutil.rmtree(os.getenv("HOME") + "/.dedupStore/chunks")
+    if os.path.exists(os.getenv("HOME") + "/.dedupStore/lockers"):
+        shutil.rmtree(os.getenv("HOME") + "/.dedupStore/lockers")
     
     # generate 50 10MB ACSII files
     createTestFile()
@@ -64,8 +64,8 @@ if __name__ == "__main__":
     # show disk usage statics
     test_files_size = getdirsize("./Testfiles")
     print("test file total size: %.3f MB" % (test_files_size/1024/1024))
-    chunks_size = getdirsize("./chunks")
-    lockers_size = getdirsize("./lockers")
+    chunks_size = getdirsize(os.getenv("HOME") + "/.dedupStore/chunks")
+    lockers_size = getdirsize(os.getenv("HOME") + "/.dedupStore/lockers")
     print("actual usage: %.3f MB" % ((chunks_size+lockers_size)/1024/1024))
     print("lockers: %.3f MB" % (lockers_size/1024/1024))
     print("chunks: %.3f MB" % (chunks_size/1024/1024))

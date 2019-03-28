@@ -12,16 +12,8 @@ addfilename=""
 retfilename=""
 lockername=""
 output=""
-jarpath="$(dirname $(readlink -f $0))/deduplicator.jar"
 
-# SOURCE="${BASH_SOURCE[0]}"
-# while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-#   DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
-#   SOURCE="$(readlink "$SOURCE")"
-#   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-# done
-# jarpath="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )/deduplicator.jar"
-
+echo "$(dirname $(readlink -f $0))"
 
 while :; do
     case $1 in
@@ -93,9 +85,9 @@ if [ -n "${addfilename}" ];
 then
 	if [ -n "${lockername}" ];
 	then
-		java -jar $jarpath -addFile $addfilename -locker $lockername
+		java -jar deduplicator.jar -addFile $addfilename -locker $lockername
 	else
-		java -jar $jarpath -addFile $addfilename
+		java -jar deduplicator.jar -addFile $addfilename
 	fi
 elif [ -n "${retfilename}" ]; 
 then
@@ -103,9 +95,9 @@ then
 	then
 		if [ -n "${output}" ]; 
 		then
-			java -jar $jarpath -retrieveFile $retfilename -output $output -locker $lockername
+			java -jar deduplicator.jar -retrieveFile $retfilename -output $output -locker $lockername
 		else
-			java -jar $jarpath -retrieveFile $retfilename -locker $lockername
+			java -jar deduplicator.jar -retrieveFile $retfilename -locker $lockername
 		fi
 	else
 		die 'ERROR: must include locker name when retrieveing the file'
