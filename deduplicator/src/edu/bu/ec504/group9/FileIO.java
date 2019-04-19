@@ -1,7 +1,11 @@
 package edu.bu.ec504.group9;
 
+import java.nio.file.*;
+
 import java.io.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 
 public class FileIO {
@@ -16,6 +20,9 @@ public class FileIO {
 
     /** define where all the locker objects are stored */
     private static String lockersDir = "lockers";
+
+    /** define where the export locker's data are stored */
+    private static String exportsDir = "exports";
 
     /** define where to save chunk info */
     private static String chunksInfo = "chunksInfo";
@@ -38,9 +45,11 @@ public class FileIO {
     public static void initialize() {
         String chunks = new StringJoiner(File.separator).add(storageDir).add(chunksDir).toString();
         String lockers = new StringJoiner(File.separator).add(storageDir).add(lockersDir).toString();
+        String exports = new StringJoiner(File.separator).add(storageDir).add(exportsDir).toString();
         File storesDirectory = new File(storageDir);
         File chunksDirectory = new File(chunks);
         File lockerDirectory = new File(lockers);
+        File exportDirectory = new File(exports);
 
         if (!storesDirectory.exists()) {
             storesDirectory.mkdir();
@@ -52,6 +61,10 @@ public class FileIO {
 
         if (!lockerDirectory.exists()) {
             lockerDirectory.mkdir();
+        }
+
+        if (!exportDirectory.exists()) {
+            exportDirectory.mkdir();
         }
     }
 
@@ -133,6 +146,19 @@ public class FileIO {
         }
     }
 
+    public static void saveFilesInfoTo(HashMap<String, FileInfo> files, String lockerName, String toDir) {
+        String fileInfoPath = new StringJoiner(File.separator).add(toDir).add(lockerName).toString();
+        try {
+            FileOutputStream fos = new FileOutputStream(fileInfoPath);
+            ObjectOutputStream out = new ObjectOutputStream(fos);
+            out.writeObject(files);
+            out.close();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /** save chunk's data to disk, each chunk is stored in a file named by its hash */
     public static long saveChunk(Chunk chunk) {
         StringJoiner joiner = new StringJoiner(File.separator);
@@ -151,6 +177,19 @@ public class FileIO {
         File chunkFile = new File(chunkPath);
 
         return chunkFile.length();
+    }
+
+    public static void saveChunkTo(Chunk chunk, String toDir) {
+        String chunkPath = new StringJoiner(File.separator).add(toDir).add(chunk.chunkHash).toString();
+        try {
+            FileOutputStream fos = new FileOutputStream(chunkPath);
+            ObjectOutputStream out = new ObjectOutputStream(fos);
+            out.writeObject(chunk);
+            out.close();
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /** get the chunk's data */
@@ -187,4 +226,59 @@ public class FileIO {
             file.delete();
         }
     }
+
+    private static void delDirRecursive(String dirName) {
+        Path targetDir = Paths.get(dirName);
+        try {
+            Files.walkFileTree(targetDir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void exportLocker(String lockerName, String outputPath) {
+        /** output loker's metadata and chunks' data into /exports directory */
+        String exports = new StringJoiner(File.separator).add(storageDir).add(exportsDir).toString();
+        String lockerExport = new StringJoiner(File.separator).add(exports).add(lockerName).toString();
+        String chunks = new StringJoiner(File.separator).add(lockerExport).add("chunks").toString();
+        File lockerExpDir = new File(lockerExport);
+        File chunkExpDir = new File(chunks);
+        if (lockerExpDir.exists()) {
+            delDirRecursive(lockerExport);
+        } else {
+            lockerExpDir.mkdir();
+        }
+        chunkExpDir.mkdir();
+
+        HashMap<String, FileInfo> files;
+        if (FileIO.existsFilesInfo(lockerName)) {
+            files = FileIO.extractFilesInfo(lockerName);
+        } else {
+            files = new HashMap<>();
+        }
+
+        for (Map.Entry<String, FileInfo> entry : files.entrySet()) {
+            FileInfo info = entry.getValue();
+            for (String h : info.hashes) {
+                Chunk chunk = getChunk(h);
+                saveChunkTo(chunk, chunks);
+            }
+        }
+
+        saveFilesInfoTo(files, lockerName, lockerExport);
+    }
+
+//    public static void importLocker()
 }

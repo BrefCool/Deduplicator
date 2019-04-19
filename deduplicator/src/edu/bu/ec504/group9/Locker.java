@@ -152,4 +152,15 @@ public class Locker {
             e.printStackTrace();
         }
     }
+  public void deleteFile(String fileName){
+        FileInfo info = files.get(fileName);
+        if (info == null){
+            System.out.println("This file doesn't exist!");
+            return;
+        }
+        Queue<String>hashes = info.hashes;
+        for (String hash : hashes) {
+            deleteChunk(hash);}
+        files.remove(fileName);
+    }
 }

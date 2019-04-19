@@ -29,6 +29,7 @@ public class Dedup extends JFrame {
 
     /** initialize GUI */
     public Dedup() {
+
         FileIO.initialize();
         createView();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -37,6 +38,7 @@ public class Dedup extends JFrame {
         setResizable(false);
     }
         private void createView(){
+            JFrame f = new JFrame("Deduplicator");
             JPanel panel = new JPanel();
             getContentPane().add(panel);
 
@@ -47,16 +49,15 @@ public class Dedup extends JFrame {
             lockerName = new JTextField();
             lockerName.setPreferredSize(new Dimension(150,30));
             panel.add(lockerName);
-            String locker = lockerName.getText();
-            Locker myLocker = LockerFactory.getLocker(locker, LockerFactory.CHUNKING.FIXEDSIZE);
-            submitButton = new JButton("Submit");
+            String locker;
+//            Locker myLocker = LockerFactory.getLocker(locker, LockerFactory.CHUNKING.FIXEDSIZE);
+            submitButton = new JButton("Exchange");
             submitButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String locker = lockerName.getText();
-                    Locker myLocker = LockerFactory.getLocker(locker, LockerFactory.CHUNKING.FIXEDSIZE);
                     if (locker.isEmpty()){
-                        Message.setText("Locker set to default");
+                        Message.setText("Locker name: default");
                     }else{
                         Message.setText("Locker name:  "+locker);
                     }
@@ -75,23 +76,26 @@ public class Dedup extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     String locker = lockerName.getText();
+                    if (locker.isEmpty()){
+                        locker = "default";
+                    }
                     Locker myLocker = LockerFactory.getLocker(locker, LockerFactory.CHUNKING.FIXEDSIZE);
                     String name = addFileName.getText();
                     if (name.isEmpty()){
                         sysMessage.append("Name can't be empty!\n");
                     }else{
                         myLocker.addFile(name);
-                        if (!new File(name).exists()) {
-                            sysMessage.append("file does not exists\n");
-                        }
-
-                        /** set file metadata */
-                        if (myLocker.containsFile(name)) {
-                            sysMessage.append("filename already exists\n");
-                        }
-                        else {
-
-                        sysMessage.append("File Added!             \n");}
+                        PrintStream sysOut = System.out;
+                        System.setOut(new PrintStream(new OutputStream() {
+                            @Override
+                            public void write(int b) throws IOException {
+                                sysMessage.append(String.valueOf((char) b));
+                                sysOut.write(b);
+                            }
+                        }));
+//                        else {
+//
+//                        sysMessage.append("File Added!             \n");}
                     }
                 }
             });
@@ -133,6 +137,9 @@ public class Dedup extends JFrame {
                 public void actionPerformed(ActionEvent e) {
                     String path = filePath.getText();
                     String locker = lockerName.getText();
+                    if (locker.isEmpty()){
+                        locker = "default";
+                    }
                     Locker myLocker = LockerFactory.getLocker(locker, LockerFactory.CHUNKING.FIXEDSIZE);
                     String name = retrieveFileName.getText();
                     if (name.isEmpty()){
@@ -183,5 +190,6 @@ public class Dedup extends JFrame {
             });
         }
     }
+
 
 
