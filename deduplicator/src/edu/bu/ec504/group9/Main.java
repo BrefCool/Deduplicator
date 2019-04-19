@@ -1,37 +1,28 @@
 package edu.bu.ec504.group9;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.StringJoiner;
 
 public class Main {
 
     public static void main(String[] args) {
-//        /** have to  initialize FileIO first, this will create lockers and chunks directory */
-//	    FileIO.initialize();
+        /** have to  initialize FileIO first, this will create lockers and chunks directory */
+	    FileIO.initialize();
+
+	    /** get locker, each locker is a independent storage system */
+	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.ROLLING);
+
+//	    for (int i = 0; i <=99 ; i++)
+//	    	myLocker.addFile(i + ".png");
 //
-//	    /** get locker, each locker is a independent storage system */
-//	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.FIXEDSIZE);
-//
-//	    for (int i = 0; i < 10; i++) {
-//            myLocker.addFile("TestFile0"+i+".txt");
-//        }
-//        for (int i = 10; i < 50; i++) {
-//            myLocker.addFile("TestFile"+i+".txt");
-//        }
-//        for (int i = 0; i < 10; i++) {
-//            myLocker.retrieveFile("TestFile0"+i+".txt","/Users/wang/Desktop/testfile");
-//        }
-//        for (int i = 10; i < 50; i++) {
-//            myLocker.retrieveFile("TestFile"+i+".txt", "/Users/wang/Desktop/testfile");
-//        }
-//        StringJoiner joiner = new StringJoiner(File.separator);
-//        joiner.add("haha").add("test");
-//        System.out.println(joiner.toString());
-//        System.out.println(System.getProperty("user.home"));
-        FileIO.initialize();
+//		for (int i = 0; i <= 99; i++)
+//	    	myLocker.retrieveFile(+ i + ".png", "/Users/wang/Desktop/504project/output");
+		myLocker.addFile("/Users/wang/Desktop/504project/new");
+		//myLocker.retrieveFile("TestFile00.txt", "/Users/wang/Desktop/504project/output");
+		//myLocker.retrieveFile("TestFile01.txt", "/Users/wang/Desktop/504project/output");
+        myLocker.retrieveFile("new", "/Users/wang/Desktop/504project/output");
+
     }
 }

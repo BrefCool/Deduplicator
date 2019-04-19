@@ -1,5 +1,4 @@
 package edu.bu.ec504.group9;
-
 import edu.bu.ec504.group9.Chunking.Chunking;
 import edu.bu.ec504.group9.Chunking.FixedSizeChunking;
 
@@ -15,6 +14,8 @@ public class Locker {
      * key: filename
      * value: FileInfo object*/
     private HashMap<String, FileInfo> files;
+
+    public  HashMap<String,ArrayList<String>> directorys;
 
     /** the locker's name */
     private String lockerName;
@@ -41,6 +42,7 @@ public class Locker {
         db = ChunkDB.getInstance();
         chunking = chunkingModule;
         files = retrieveFileInfo();
+        directorys = new HashMap<>();
     }
 
     /** restore all the files' information of this locker from disk *
@@ -68,90 +70,131 @@ public class Locker {
     }
 
     /** add new file to this locker */
-    public void addFile(String filepath) {
-        File file = new File(filepath);
+    public void addFile(String filename) {
+        /** para to check the filename is file or directory */
+        File checkFileORDir = new File(filename);
 
-        /** check file exists */
-        if (!file.exists()) {
-            System.out.println("file does not exists");
-            return;
-        }
+        // if is file
+        if (checkFileORDir.isFile()) {
 
-        /** extract file name */
-        String filename = file.getName();
-
-        /** set file metadata */
-        if (containsFile(filename)) {
-            System.out.println("filename already exists");
-            return;
-        }
-
-        /** initialize the file metadata */
-        FileInfo metadata = new FileInfo();
-
-        /** contruct FileInputStream */
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(filepath);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        /** get every Chunk
-         *  each Chunk is decided by Chunking Module
-         *  (Chunking Module should decide chunk's hash, data and size)
-         *  store each chunk to chunkDB
-         *  add metadata information*/
-        Chunk chunk;
-        try {
-            while (fis.available() != 0) {
-                chunk = chunking.getNextChunk(fis);
-                db.addChunk(chunk);
-                metadata.addNextChunk(chunk.chunkHash, chunk.chunkSize);
+            /** check file exists */
+            if (!new File(filename).exists()) {
+                System.out.println("file does not exists");
+                return;
             }
-            fis.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            /** clear the file metedata & chunks created so far */
-            for (int i = 0; i < metadata.hashes.size(); i++) {
-                FileIO.deleteChunk(metadata.hashes.get(i));
+
+            /** set file metadata */
+            if (containsFile(filename)) {
+                System.out.println("filename already exists");
+                return;
             }
-            return;
+
+            /** initialize the file metadata */
+            FileInfo metadata = new FileInfo();
+
+            /** contruct FileInputStream */
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(filename);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                return;
+            }
+            /** get every Chunk
+             *  each Chunk is decided by Chunking Module
+             *  (Chunking Module should decide chunk's hash, data and size)
+             *  store each chunk to chunkDB
+             *  add metadata information*/
+            try {
+                chunking.getChunk(new File(filename), db, metadata);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            /** save metedata */
+            files.put(filename, metadata);
+
+            /** update chunkDB to disk */
+            db.updateChunkInfo();
+
+
+            /** update metadata to disk */
+            updateFileInfo();
+        }
+        // if is directory
+        if (checkFileORDir.isDirectory()) {
+            System.out.println("it is directory");
+            addDirectory(filename);
         }
 
-        /** save metedata */
-        files.put(filename, metadata);
-
-        /** update chunkDB to disk */
-        db.updateChunkInfo();
-
-        /** update metadata to disk */
-        updateFileInfo();
     }
 
     /** retrieve file from locker */
     public void retrieveFile(String filename, String outputPath) {
-        FileInfo info = files.get(filename);
-        if (info == null){
-          System.out.println("This file doesn't exist!");
-          return;
-        }
-        try {
-            File writename = new File(outputPath + "/" + filename);
-            writename.createNewFile(); // Build a new file
-            FileOutputStream stream = new FileOutputStream(writename, true);
-            Queue<String> hashes = info.hashes;
-            for (String hash : hashes) {
-                Chunk chunk = getChunk(hash);
-                stream.write(chunk.getData());
+        /**
+         * if the filename is not a directory
+         */
+        if (!directorys.containsKey(filename)) {
+            String absFileName = "";
+            for (String key : files.keySet()) {
+                String[] key_list = key.split("\\/");
+                if (key_list[key_list.length-1].equals(filename)) {
+                    absFileName = key;
+                }
             }
-            stream.flush();
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            FileInfo info = files.get(absFileName);
+            if (info == null) {
+                System.out.println("This file doesn't exist!");
+                return;
+            }
+            try {
+                File writename = new File(outputPath + "/" + filename);
+                writename.createNewFile(); // Build a new file
+                FileOutputStream stream = new FileOutputStream(writename, true);
+                Queue<String> hashes = info.hashes;
+                for (String hash : hashes) {
+                    Chunk chunk = getChunk(hash);
+                    stream.write(chunk.getData());
+                }
+                stream.flush();
+                stream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else {
+            /** if it's a directory */
+            ArrayList<String> list = directorys.get(filename);
+            for (String str : list) {
+                retrieveFile(str, outputPath);
+            }
         }
     }
+
+    /**
+     * funtion to add files in the whole directory
+     * @param dirPath
+     */
+    public void addDirectory(String dirPath) {
+
+        String[] strs = dirPath.split("\\/");
+        String dir = strs[strs.length-1];
+        System.out.println(dir);
+        if (directorys.containsKey(dir)) {
+            System.out.println("directory has existed, please change a name");
+            return;
+        }
+
+        directorys.put(dir,new ArrayList<>());
+        File path = new File(dirPath);
+        File[] files_list = path.listFiles();
+        for (File file : files_list) {
+            String absPath = file.getAbsolutePath();
+            String [] s = absPath.split("\\/");
+            directorys.get(dir).add(s[s.length-1]);
+            addFile(absPath);
+        }
+    }
+
   public void deleteFile(String fileName){
         FileInfo info = files.get(fileName);
         if (info == null){

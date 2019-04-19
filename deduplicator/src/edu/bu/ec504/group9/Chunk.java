@@ -12,6 +12,10 @@ public class Chunk implements Serializable {
     /** chunk's data */
     private byte[] chunkData;
 
+    public Chunk() {
+
+    }
+
     public Chunk(String hash, byte[] data) {
         chunkHash = hash;
         chunkData = data;
