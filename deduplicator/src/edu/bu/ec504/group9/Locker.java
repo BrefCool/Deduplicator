@@ -59,6 +59,10 @@ public class Locker {
         }
     }
 
+    public LockerMeta getMetaData() {
+        return metaData;
+    }
+
     /** restore all the files' information of this locker from disk *
      *  each locker has its own files info stored in /lockers directory
      *  locker's name is unique
@@ -97,6 +101,10 @@ public class Locker {
         /** extract filename */
         String filename = checkFileORDir.getName();
         filename = new StringJoiner(File.separator).add(rootPath).add(filename).toString();
+        /** record first level file or dir */
+        if (rootPath.equals("")) {
+            metaData.directorys.get("/").add(filename);
+        }
 
         // if is file
         if (checkFileORDir.isFile()) {
@@ -245,6 +253,9 @@ public class Locker {
 
       /** if this file belongs to one directory, remove this file from the directory */
       String rootPath = filename.substring(0, filename.lastIndexOf('/'));
+      if (rootPath.equals("")) {
+          rootPath = "/";
+      }
       if (metaData.directorys.containsKey(rootPath)) {
           ArrayList<String> list = metaData.directorys.get(rootPath);
           list.removeIf(s -> (s.equals(target)));

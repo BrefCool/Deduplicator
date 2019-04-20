@@ -5,6 +5,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.StringJoiner;
 import java.util.concurrent.locks.Lock;
 import javax.swing.*;
@@ -18,7 +20,7 @@ public class GUI extends JFrame {
     JButton ALB = new JButton("Add Locker");
     JPopupMenu menu = new JPopupMenu();
     JButton RFI = new JButton("Retrieve FileInfo");
-    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.FIXEDSIZE);
+    Locker myLocker = LockerFactory.getLocker("default", LockerFactory.CHUNKING.ROLLING);
     JList<String> jl = new JList<>();
     JComboBox<String> jc = new JComboBox<>();
     String lockerDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
@@ -55,11 +57,31 @@ public class GUI extends JFrame {
         frame.add(RB);
     }
 
+    public void addFileDirElements(LockerMeta meta, DefaultListModel dlm, String filename) {
+        HashMap<String, FileInfo> files = meta.files;
+        HashMap<String, ArrayList<String>> directories = meta.directorys;
+
+        if (!directories.containsKey(filename)) {
+            if (!files.containsKey(filename)) {
+                System.out.println("file not exists?");
+                return;
+            }
+            dlm.addElement(filename);
+        } else {
+            dlm.addElement(filename);
+            for (String subFile : directories.get(filename))
+                addFileDirElements(meta, dlm, subFile);
+        }
+    }
+
     public void JlistSetElement(Locker locker) {
         DefaultListModel dlm = new DefaultListModel();
+        LockerMeta meta = locker.getMetaData();
         jl.removeAll();
-        for (String filename : locker.retrieveFileInfo().files.keySet())
-            dlm.addElement(filename);
+
+        for (String subFile : meta.directorys.get("/"))
+            addFileDirElements(meta, dlm, subFile);
+
         jl.setModel(dlm);
     }
 
@@ -80,7 +102,8 @@ public class GUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String locker = (String) jc.getSelectedItem();
-                myLocker = LockerFactory.getLocker(locker,LockerFactory.CHUNKING.FIXEDSIZE);
+                if (locker != null && !locker.equals(""))
+                    myLocker = LockerFactory.getLocker(locker,LockerFactory.CHUNKING.ROLLING);
                 JlistSetElement(myLocker);
             }
         });
@@ -123,7 +146,7 @@ public class GUI extends JFrame {
             if (null != jl.getSelectedValue()){
                 myLocker.deleteFile(jl.getSelectedValue());
                 JlistSetElement(myLocker);
-                System.out.println("123");
+                //System.out.println("123");
             }
         });
         menu.add(retrieve);
@@ -163,7 +186,7 @@ public class GUI extends JFrame {
     }
 
     public void jtInit(){
-        jt.setText("Default");
+        jt.setText("default");
         jt.setBounds(10, 10, 150, 50);
         jt.setFont(new Font("default", Font.BOLD, 18));
     }
@@ -171,7 +194,9 @@ public class GUI extends JFrame {
     public void ALBInit(){
         ALB.setBounds(160, 10, 120, 50);
         ALB.addActionListener(ActionEvent -> {
-            myLocker = LockerFactory.getLocker(jt.getText(), LockerFactory.CHUNKING.FIXEDSIZE);
+            System.out.println("text:" + jt.getText());
+            if (!jt.getText().equals(""))
+                myLocker = LockerFactory.getLocker(jt.getText(), LockerFactory.CHUNKING.ROLLING);
             jcReset();
         });
     }

@@ -14,5 +14,6 @@ public class LockerMeta implements Serializable {
     LockerMeta() {
         files = new HashMap<>();
         directorys = new HashMap<>();
+        directorys.put("/", new ArrayList<>());
     }
 }

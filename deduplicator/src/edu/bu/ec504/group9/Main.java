@@ -11,25 +11,27 @@ public class Main {
         /** have to  initialize FileIO first, this will create lockers and chunks directory */
 	    FileIO.initialize();
 
-	    /** get locker, each locker is a independent storage system */
-	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.ROLLING);
+	    GUI gui = new GUI();
 
-	    //myLocker.addFile("/home/yuxuansu/study/EC504/test", "");
-        System.out.println("before delete:");
-        myLocker.printFiles();
-        myLocker.printDirs();
+	    /** get locker, each locker is a independent storage system */
+//	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.ROLLING);
+//
+//	    myLocker.addFile("/home/yuxuansu/study/EC504/test", "");
+//        System.out.println("before delete:");
+//        myLocker.printFiles();
+//        myLocker.printDirs();
 
 //	    myLocker.retrieveFile("test/test/test3.txt", "/home/yuxuansu/study/EC504/test_output");
 
-        myLocker.deleteFile("test/test1.txt");
+//        myLocker.deleteFile("test");
 
 //        myLocker.retrieveFile("/test/test1.txt", "/home/yuxuansu/study/EC504/test_output");
 //        myLocker.retrieveFile("test/test", "/home/yuxuansu/study/EC504/test_output");
 
 
-        System.out.println("after delete:");
-        myLocker.printFiles();
-        myLocker.printDirs();
+//        System.out.println("after delete:");
+//        myLocker.printFiles();
+//        myLocker.printDirs();
 
 //	    for (int i = 0; i <=99 ; i++)
 //	    	myLocker.addFile(i + ".png");
