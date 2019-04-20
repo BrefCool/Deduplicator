@@ -36,7 +36,7 @@ public class CmdLineArgs {
 
             /** do operations */
             if (y != 0) {
-                myLocker.addFile(addFileName);
+                myLocker.addFile(addFileName, "");
             }
             if (z != 0) {
                 if (w != 0) {

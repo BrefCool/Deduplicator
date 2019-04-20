@@ -108,11 +108,11 @@ public class FileIO {
         }
     }
 
-    public static HashMap<String, FileInfo> extractFilesInfo(String lockerName) {
+    public static LockerMeta extractFilesInfo(String lockerName) {
         StringJoiner joiner = new StringJoiner(File.separator);
         joiner.add(storageDir).add(lockersDir).add(lockerName);
         String fileInfoPath = joiner.toString();
-        HashMap<String, FileInfo> result = null;
+        LockerMeta result = null;
 
         if (!existsFilesInfo(lockerName)) {
             return result;
@@ -121,7 +121,7 @@ public class FileIO {
         try {
             FileInputStream fis = new FileInputStream(fileInfoPath);
             ObjectInputStream in = new ObjectInputStream(fis);
-            result = (HashMap<String, FileInfo>)in.readObject();
+            result = (LockerMeta) in.readObject();
             in.close();
             fis.close();
         } catch (IOException | ClassNotFoundException e) {
@@ -131,7 +131,7 @@ public class FileIO {
         return result;
     }
 
-    public static void saveFilesInfo(HashMap<String, FileInfo> files, String lockerName) {
+    public static void saveFilesInfo(LockerMeta files, String lockerName) {
         StringJoiner joiner = new StringJoiner(File.separator);
         joiner.add(storageDir).add(lockersDir).add(lockerName);
         String fileInfoPath = joiner.toString();
@@ -146,7 +146,7 @@ public class FileIO {
         }
     }
 
-    public static void saveFilesInfoTo(HashMap<String, FileInfo> files, String lockerName, String toDir) {
+    public static void saveFilesInfoTo(LockerMeta files, String lockerName, String toDir) {
         String fileInfoPath = new StringJoiner(File.separator).add(toDir).add(lockerName).toString();
         try {
             FileOutputStream fos = new FileOutputStream(fileInfoPath);
@@ -262,14 +262,14 @@ public class FileIO {
         }
         chunkExpDir.mkdir();
 
-        HashMap<String, FileInfo> files;
+        LockerMeta meta;
         if (FileIO.existsFilesInfo(lockerName)) {
-            files = FileIO.extractFilesInfo(lockerName);
+            meta = FileIO.extractFilesInfo(lockerName);
         } else {
-            files = new HashMap<>();
+            meta = new LockerMeta();
         }
 
-        for (Map.Entry<String, FileInfo> entry : files.entrySet()) {
+        for (Map.Entry<String, FileInfo> entry : meta.files.entrySet()) {
             FileInfo info = entry.getValue();
             for (String h : info.hashes) {
                 Chunk chunk = getChunk(h);
@@ -277,7 +277,7 @@ public class FileIO {
             }
         }
 
-        saveFilesInfoTo(files, lockerName, lockerExport);
+        saveFilesInfoTo(meta, lockerName, lockerExport);
     }
 
 //    public static void importLocker()

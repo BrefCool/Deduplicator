@@ -58,7 +58,7 @@ public class GUI extends JFrame {
     public void JlistSetElement(Locker locker) {
         DefaultListModel dlm = new DefaultListModel();
         jl.removeAll();
-        for (String filename : locker.retrieveFileInfo().keySet())
+        for (String filename : locker.retrieveFileInfo().files.keySet())
             dlm.addElement(filename);
         jl.setModel(dlm);
     }
@@ -154,7 +154,7 @@ public class GUI extends JFrame {
                 JOptionPane.showInternalMessageDialog(null, "Filename already exists", "DeDuplicator",
                         JOptionPane.INFORMATION_MESSAGE);
             else if (null != file) {
-                myLocker.addFile(file.getAbsolutePath());
+                myLocker.addFile(file.getAbsolutePath(), "");
                 JOptionPane.showInternalMessageDialog(null, "Add file successfully", "DeDuplicator",
                         JOptionPane.INFORMATION_MESSAGE);
                 JlistSetElement(myLocker);

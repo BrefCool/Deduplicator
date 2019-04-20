@@ -54,6 +54,9 @@ public class ChunkDB {
             chunkRef.put(chunk.chunkHash, 1);
             /** save the chunk's data to disk */
             FileIO.saveChunk(chunk);
+        } else {
+            Integer ref = chunkRef.get(chunk.chunkHash);
+            chunkRef.put(chunk.chunkHash, ref + 1);
         }
     }
 
@@ -66,7 +69,7 @@ public class ChunkDB {
     }
 
     /** chunk's referCount -= 1 */
-    public void retrieveChunk(String hash) {
+    public void deleteChunk(String hash) {
         if (containsChunk(hash)) {
             Integer ref = chunkRef.get(hash);
             if (ref - 1 <= 0) {

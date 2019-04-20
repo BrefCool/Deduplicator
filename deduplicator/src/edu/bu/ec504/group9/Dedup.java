@@ -84,7 +84,7 @@ public class Dedup extends JFrame {
                     if (name.isEmpty()){
                         sysMessage.append("Name can't be empty!\n");
                     }else{
-                        myLocker.addFile(name);
+                        myLocker.addFile(name, "");
                         PrintStream sysOut = System.out;
                         System.setOut(new PrintStream(new OutputStream() {
                             @Override

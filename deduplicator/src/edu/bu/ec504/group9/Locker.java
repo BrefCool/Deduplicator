@@ -13,9 +13,9 @@ public class Locker {
     /** all the files' information stored in this locker
      * key: filename
      * value: FileInfo object*/
-    private HashMap<String, FileInfo> files;
 
-    public  HashMap<String,ArrayList<String>> directorys;
+    /** Locker's metadata */
+    private LockerMeta metaData;
 
     /** the locker's name */
     private String lockerName;
@@ -33,7 +33,7 @@ public class Locker {
         /** use FixedSizeChunking as default */
         chunking = new FixedSizeChunking();
         /** restore all the files' information from disk */
-        files = retrieveFileInfo();
+        metaData = retrieveFileInfo();
     }
 
     /** construct the Locker instance with locker's name */
@@ -41,47 +41,65 @@ public class Locker {
         lockerName = name;
         db = ChunkDB.getInstance();
         chunking = chunkingModule;
-        files = retrieveFileInfo();
-        directorys = new HashMap<>();
+        metaData = retrieveFileInfo();
+    }
+
+    public void printFiles() {
+        for (String key : metaData.files.keySet()) {
+            System.out.println(key);
+        }
+    }
+
+    public void printDirs() {
+        for (String key : metaData.directorys.keySet()) {
+            System.out.println(key + ":");
+            for (String ele : metaData.directorys.get(key)) {
+                System.out.println(ele);
+            }
+        }
     }
 
     /** restore all the files' information of this locker from disk *
      *  each locker has its own files info stored in /lockers directory
      *  locker's name is unique
      */
-    public HashMap<String, FileInfo> retrieveFileInfo() {
+    public LockerMeta retrieveFileInfo() {
         if (FileIO.existsFilesInfo(lockerName)) {
             return FileIO.extractFilesInfo(lockerName);
         } else {
-            HashMap<String, FileInfo> map = new HashMap<>();
-            FileIO.saveFilesInfo(map, lockerName);
-            return map;
+            LockerMeta data = new LockerMeta();
+            FileIO.saveFilesInfo(data, lockerName);
+            return data;
         }
     }
 
     /** update all files information, save them to disk*/
     public void updateFileInfo() {
-        FileIO.saveFilesInfo(files, lockerName);
+        FileIO.saveFilesInfo(metaData, lockerName);
     }
 
     /** check the file info */
     public boolean containsFile(String filename) {
-        return files.containsKey(filename);
+        return metaData.files.containsKey(filename);
     }
 
     /** add new file to this locker */
-    public void addFile(String filename, String path) {
+    public void addFile(String filePath, String rootPath) {
         /** para to check the filename is file or directory */
-        File checkFileORDir = new File(filename);
+        File checkFileORDir = new File(filePath);
+
+        /** check file exists */
+        if (!checkFileORDir.exists()) {
+            System.out.println("file doesn't exists");
+            return;
+        }
+
+        /** extract filename */
+        String filename = checkFileORDir.getName();
+        filename = new StringJoiner(File.separator).add(rootPath).add(filename).toString();
 
         // if is file
         if (checkFileORDir.isFile()) {
-
-            /** check file exists */
-            if (!new File(filename).exists()) {
-                System.out.println("file does not exists");
-                return;
-            }
 
             /** set file metadata */
             if (containsFile(filename)) {
@@ -92,63 +110,45 @@ public class Locker {
             /** initialize the file metadata */
             FileInfo metadata = new FileInfo();
 
-            /** contruct FileInputStream */
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(filename);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                return;
-            }
             /** get every Chunk
              *  each Chunk is decided by Chunking Module
              *  (Chunking Module should decide chunk's hash, data and size)
              *  store each chunk to chunkDB
              *  add metadata information*/
             try {
-                chunking.getChunk(new File(filename), db, metadata);
+                chunking.getChunk(new File(filePath), db, metadata);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
             /** save metedata */
-            //files.put(filename, metadata);
-            files.put(path, metadata);
+            metaData.files.put(filename, metadata);
 
-            /** update chunkDB to disk */
-            db.updateChunkInfo();
-
-
-            /** update metadata to disk */
-            updateFileInfo();
         }
-        // if is directory
-        if (checkFileORDir.isDirectory()) {
-            //System.out.println("it is directory");
-            addDirectory(filename, path);
+        else if (checkFileORDir.isDirectory()) {
+            addDirectory(filePath, filename);
         }
+
+        /** update chunkDB to disk */
+        db.updateChunkInfo();
+
+        /** update metadata to disk */
+        updateFileInfo();
 
     }
 
     /** retrieve file from locker */
     public void retrieveFile(String filename, String outputPath) {
+        if (filename.length() != 0 && filename.charAt(0) != '/') {
+            filename = '/' + filename;
+        }
         /**
          * if the filename is not a directory
          */
 
-        if (!directorys.containsKey(filename)) {
-            //String absFileName = "";
-            //String[] list = filename.split("\\/");
-//            for (String key : files.keySet()) {
-//                String[] key_list = key.split("\\/");
-//                if (key_list[key_list.length-1].equals(filename)) {
-//                    absFileName = key;
-//                }
-//            }
+        if (!metaData.directorys.containsKey(filename)) {
 
-
-            //FileInfo info = files.get(absFileName);
-            FileInfo info = files.get(filename);
+            FileInfo info = metaData.files.get(filename);
             if (info == null) {
                 System.out.println("This file doesn't exist!");
                 return;
@@ -156,7 +156,7 @@ public class Locker {
             try {
                 String[] list = filename.split("\\/");
                 File writename = new File(outputPath + "/" + list[list.length-1]);
-                System.out.println(writename.toString());
+                //System.out.println(writename.toString());
                 writename.createNewFile(); // Build a new file
                 FileOutputStream stream = new FileOutputStream(writename, true);
                 Queue<String> hashes = info.hashes;
@@ -171,7 +171,7 @@ public class Locker {
             }
         }else {
             /** if it's a directory */
-            ArrayList<String> list = directorys.get(filename);
+            ArrayList<String> list = metaData.directorys.get(filename);
             String[] strs = filename.split("\\/");
             outputPath = outputPath +"/" + strs[strs.length-1];
 
@@ -191,34 +191,70 @@ public class Locker {
      */
     public void addDirectory(String dirPath, String relPath) {
 
-        //String[] strs = dirPath.split("\\/");
-        //String dir = strs[strs.length-1];
-        //System.out.println(dir);
-        if (directorys.containsKey(relPath)) {
+        if (metaData.directorys.containsKey(relPath)) {
             System.out.println("directory has existed, please change a name");
             return;
         }
 
-        directorys.put(relPath,new ArrayList<>());
+        metaData.directorys.put(relPath,new ArrayList<>());
         File path = new File(dirPath);
         File[] files_list = path.listFiles();
         for (File file : files_list) {
             String absPath = file.getAbsolutePath();
             String [] s = absPath.split("\\/");
-            directorys.get(relPath).add(relPath+"/"+s[s.length-1]);
-            addFile(absPath,relPath+"/"+s[s.length-1]);
+            metaData.directorys.get(relPath).add(relPath+"/"+s[s.length-1]);
+            addFile(absPath,relPath);
         }
     }
 
-  public void deleteFile(String fileName){
-        FileInfo info = files.get(fileName);
-        if (info == null){
-            System.out.println("This file doesn't exist!");
-            return;
-        }
-        Queue<String>hashes = info.hashes;
-        for (String hash : hashes) {
-            deleteChunk(hash);}
-        files.remove(fileName);
+  public void deleteFile(String filename){
+      if (filename.length() != 0 && filename.charAt(0) != '/') {
+          filename = '/' + filename;
+      }
+
+      final String target = filename;
+
+      /**
+       * if the filename is not a directory
+       */
+      if (!metaData.directorys.containsKey(filename)) {
+
+          /** remove target file */
+          FileInfo info = metaData.files.get(filename);
+          if (info == null) {
+              System.out.println("file doesn't exists");
+              return;
+          }
+
+          for(String hash : info.hashes) {
+              db.deleteChunk(hash);
+          }
+          metaData.files.remove(filename);
+
+      } else {
+          /** if it's a directory */
+          ArrayList<String> list = metaData.directorys.get(filename);
+          ArrayList<String> listCopy = new ArrayList<>(list);
+
+          for (String subFile : listCopy) {
+              deleteFile(subFile);
+          }
+
+          metaData.directorys.remove(filename);
+      }
+
+      /** if this file belongs to one directory, remove this file from the directory */
+      String rootPath = filename.substring(0, filename.lastIndexOf('/'));
+      if (metaData.directorys.containsKey(rootPath)) {
+          ArrayList<String> list = metaData.directorys.get(rootPath);
+          list.removeIf(s -> (s.equals(target)));
+      }
+
+      /** update chunkDB to disk */
+      db.updateChunkInfo();
+
+      /** update metadata to disk */
+      updateFileInfo();
+
     }
 }
