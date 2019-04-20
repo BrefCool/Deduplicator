@@ -3,7 +3,9 @@ package edu.bu.ec504.group9;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Main {
 
@@ -11,11 +13,16 @@ public class Main {
         /** have to  initialize FileIO first, this will create lockers and chunks directory */
 	    FileIO.initialize();
 
-	    GUI gui = new GUI();
+//	    GUI gui = new GUI();
 
 	    /** get locker, each locker is a independent storage system */
-//	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.ROLLING);
-//
+	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.ROLLING);
+
+	    List<String> result =  myLocker.SSS("t");
+	    for (String s : result){
+	        System.out.println(s);
+        }
+
 //	    myLocker.addFile("/home/yuxuansu/study/EC504/test", "");
 //        System.out.println("before delete:");
 //        myLocker.printFiles();
