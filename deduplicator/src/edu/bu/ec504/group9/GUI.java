@@ -104,6 +104,7 @@ public class GUI extends JFrame {
 
     public void initJMenu() {
         JMenuItem retrieve = new JMenuItem("Retrieve");
+        JMenuItem deletion = new JMenuItem("Delete");
         retrieve.addActionListener(ActionEvent->{
             JFileChooser jfc = new JFileChooser();
             jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -118,7 +119,15 @@ public class GUI extends JFrame {
                 JOptionPane.showInternalMessageDialog(null, "File does not exist", "DeDuplicator",
                         JOptionPane.INFORMATION_MESSAGE);
         });
+        deletion.addActionListener(ActionEvent->{
+            if (null != jl.getSelectedValue()){
+                myLocker.deleteFile(jl.getSelectedValue());
+                JlistSetElement(myLocker);
+                System.out.println("123");
+            }
+        });
         menu.add(retrieve);
+        menu.add(deletion);
     }
 
     public void framInit(){

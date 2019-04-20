@@ -19,10 +19,10 @@ public class Main {
 //
 //		for (int i = 0; i <= 99; i++)
 //	    	myLocker.retrieveFile(+ i + ".png", "/Users/wang/Desktop/504project/output");
-		myLocker.addFile("/Users/wang/Desktop/504project/new");
+		myLocker.addFile("/Users/wang/Desktop/504project/testfile", "testfile");
 		//myLocker.retrieveFile("TestFile00.txt", "/Users/wang/Desktop/504project/output");
 		//myLocker.retrieveFile("TestFile01.txt", "/Users/wang/Desktop/504project/output");
-        myLocker.retrieveFile("new", "/Users/wang/Desktop/504project/output");
+        myLocker.retrieveFile("testfile/newtest", "/Users/wang/Desktop/504project/output");
 
     }
 }

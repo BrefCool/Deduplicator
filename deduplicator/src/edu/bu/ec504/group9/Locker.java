@@ -70,7 +70,7 @@ public class Locker {
     }
 
     /** add new file to this locker */
-    public void addFile(String filename) {
+    public void addFile(String filename, String path) {
         /** para to check the filename is file or directory */
         File checkFileORDir = new File(filename);
 
@@ -112,7 +112,8 @@ public class Locker {
             }
 
             /** save metedata */
-            files.put(filename, metadata);
+            //files.put(filename, metadata);
+            files.put(path, metadata);
 
             /** update chunkDB to disk */
             db.updateChunkInfo();
@@ -123,8 +124,8 @@ public class Locker {
         }
         // if is directory
         if (checkFileORDir.isDirectory()) {
-            System.out.println("it is directory");
-            addDirectory(filename);
+            //System.out.println("it is directory");
+            addDirectory(filename, path);
         }
 
     }
@@ -134,21 +135,28 @@ public class Locker {
         /**
          * if the filename is not a directory
          */
+
         if (!directorys.containsKey(filename)) {
-            String absFileName = "";
-            for (String key : files.keySet()) {
-                String[] key_list = key.split("\\/");
-                if (key_list[key_list.length-1].equals(filename)) {
-                    absFileName = key;
-                }
-            }
-            FileInfo info = files.get(absFileName);
+            //String absFileName = "";
+            //String[] list = filename.split("\\/");
+//            for (String key : files.keySet()) {
+//                String[] key_list = key.split("\\/");
+//                if (key_list[key_list.length-1].equals(filename)) {
+//                    absFileName = key;
+//                }
+//            }
+
+
+            //FileInfo info = files.get(absFileName);
+            FileInfo info = files.get(filename);
             if (info == null) {
                 System.out.println("This file doesn't exist!");
                 return;
             }
             try {
-                File writename = new File(outputPath + "/" + filename);
+                String[] list = filename.split("\\/");
+                File writename = new File(outputPath + "/" + list[list.length-1]);
+                System.out.println(writename.toString());
                 writename.createNewFile(); // Build a new file
                 FileOutputStream stream = new FileOutputStream(writename, true);
                 Queue<String> hashes = info.hashes;
@@ -164,9 +172,16 @@ public class Locker {
         }else {
             /** if it's a directory */
             ArrayList<String> list = directorys.get(filename);
+            String[] strs = filename.split("\\/");
+            outputPath = outputPath +"/" + strs[strs.length-1];
+
+
+            File dir = new File(outputPath);
+            dir.mkdir();
             for (String str : list) {
                 retrieveFile(str, outputPath);
             }
+
         }
     }
 
@@ -174,24 +189,24 @@ public class Locker {
      * funtion to add files in the whole directory
      * @param dirPath
      */
-    public void addDirectory(String dirPath) {
+    public void addDirectory(String dirPath, String relPath) {
 
-        String[] strs = dirPath.split("\\/");
-        String dir = strs[strs.length-1];
-        System.out.println(dir);
-        if (directorys.containsKey(dir)) {
+        //String[] strs = dirPath.split("\\/");
+        //String dir = strs[strs.length-1];
+        //System.out.println(dir);
+        if (directorys.containsKey(relPath)) {
             System.out.println("directory has existed, please change a name");
             return;
         }
 
-        directorys.put(dir,new ArrayList<>());
+        directorys.put(relPath,new ArrayList<>());
         File path = new File(dirPath);
         File[] files_list = path.listFiles();
         for (File file : files_list) {
             String absPath = file.getAbsolutePath();
             String [] s = absPath.split("\\/");
-            directorys.get(dir).add(s[s.length-1]);
-            addFile(absPath);
+            directorys.get(relPath).add(relPath+"/"+s[s.length-1]);
+            addFile(absPath,relPath+"/"+s[s.length-1]);
         }
     }
 
