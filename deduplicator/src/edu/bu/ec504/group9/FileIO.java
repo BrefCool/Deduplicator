@@ -216,6 +216,29 @@ public class FileIO {
         return result;
     }
 
+    public static Chunk getChunkFrom(String hash, String path) {
+        StringJoiner joiner = new StringJoiner(File.separator);
+        joiner.add(path).add(hash);
+        String chunkPath = joiner.toString();
+        Chunk result = null;
+
+        if (!new File(chunkPath).exists()) {
+            return result;
+        }
+
+        try {
+            FileInputStream fis = new FileInputStream(chunkPath);
+            ObjectInputStream in = new ObjectInputStream(fis);
+            result = (Chunk)in.readObject();
+            in.close();
+            fis.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
     /** delete the chunk file */
     public static void deleteChunk(String hash) {
         StringJoiner joiner = new StringJoiner(File.separator);
@@ -250,8 +273,8 @@ public class FileIO {
 
     public static void exportLocker(String lockerName, String outputPath) {
         /** output loker's metadata and chunks' data into /exports directory */
-        String exports = new StringJoiner(File.separator).add(storageDir).add(exportsDir).toString();
-        String lockerExport = new StringJoiner(File.separator).add(exports).add(lockerName).toString();
+        //String exports = new StringJoiner(File.separator).add(storageDir).add(exportsDir).toString();
+        String lockerExport = new StringJoiner(File.separator).add(outputPath).add(lockerName).toString();
         String chunks = new StringJoiner(File.separator).add(lockerExport).add("chunks").toString();
         File lockerExpDir = new File(lockerExport);
         File chunkExpDir = new File(chunks);
@@ -278,6 +301,63 @@ public class FileIO {
         }
 
         saveFilesInfoTo(meta, lockerName, lockerExport);
+    }
+
+    public static void importLocker(String lockerPath) {
+        File lockerFile = new File(lockerPath);
+        String lockerName = lockerFile.getName();
+        String originalPath = new StringJoiner(File.separator).add(lockerPath).add(lockerName).toString();
+        File originalFile = new File(originalPath);
+        String lockersDirectory = new StringJoiner(File.separator).add(storageDir).add(lockersDir).toString();
+        File lockers = new File(lockersDirectory);
+        File[] fs = lockers.listFiles();
+
+        if (!lockerFile.exists()) {
+            System.out.println("locker's file doesn't exists");
+            return;
+        }
+
+        if (fs != null) {
+            for (File f : fs) {
+                String fname = f.getName();
+                if (fname.equals(lockerName)) {
+                    System.out.println("lockers already exists");
+                    return;
+                }
+            }
+        }
+
+        File copiedLocker = new File(new StringJoiner(File.separator).add(lockersDirectory).add(lockerName).toString());
+        try (
+                InputStream in = new BufferedInputStream(
+                        new FileInputStream(originalFile));
+                OutputStream out = new BufferedOutputStream(
+                        new FileOutputStream(copiedLocker))) {
+
+            byte[] buffer = new byte[1024];
+            int lengthRead;
+            while ((lengthRead = in.read(buffer)) > 0) {
+                out.write(buffer, 0, lengthRead);
+                out.flush();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        Locker myLocker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.ROLLING);
+        String importChunks = new StringJoiner(File.separator).add(lockerPath).add("chunks").toString();
+        LockerMeta meta = myLocker.getMetaData();
+        ChunkDB db = ChunkDB.getInstance();
+        for (String key : meta.files.keySet()) {
+            FileInfo fileinfo = meta.files.get(key);
+            for (String hash : fileinfo.hashes) {
+                Chunk chunk = getChunkFrom(hash, importChunks);
+                db.addChunk(chunk);
+            }
+        }
+
+        db.updateChunkInfo();
     }
 
 //    public static void importLocker()

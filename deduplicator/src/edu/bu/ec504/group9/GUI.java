@@ -8,9 +8,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.StringJoiner;
-import java.util.concurrent.locks.Lock;
 import javax.swing.*;
-import javax.swing.event.ListDataListener;
+
 
 
 public class GUI extends JFrame {
@@ -25,6 +24,7 @@ public class GUI extends JFrame {
     JComboBox<String> jc = new JComboBox<>();
     String lockerDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
             .add("lockers").toString();
+    JScrollPane sp = new JScrollPane();
 
     public GUI() {
         FileIO.initialize();
@@ -33,18 +33,11 @@ public class GUI extends JFrame {
     }
     public void init() {
 
-        JButton RB = new JButton("Retrieve File");
+        JButton RB = new JButton("SubString Search");
         RB.setBounds(160, 110, 120, 50);
         RB.addActionListener(ActionEvent -> {       // retrieve file
-            JFileChooser jfc = new JFileChooser();
-            jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            jfc.showDialog(new JLabel(), "Choose");
-            File file = jfc.getSelectedFile();
-            if (null != file) {
-                myLocker.retrieveFile("TestFile00.txt", file.getAbsolutePath());
-                JOptionPane.showInternalMessageDialog(null, "Add File Successfully", "DeDuplicator",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
+            myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.FIXEDSIZE);
+            System.out.println(myLocker.SSS(jt.getText()));
         });
         jcInit();
         initJMenu();
@@ -53,8 +46,10 @@ public class GUI extends JFrame {
         jlInit();
         jtInit();
         RFIInit();
+        spInit();
         framInit();
         frame.add(RB);
+
     }
 
     public void addFileDirElements(LockerMeta meta, DefaultListModel dlm, String filename) {
@@ -131,16 +126,17 @@ public class GUI extends JFrame {
         retrieve.addActionListener(ActionEvent->{
             JFileChooser jfc = new JFileChooser();
             jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            jfc.showDialog(new JLabel(), "Choose");
+            int result = jfc.showDialog(new JLabel(), "Choose");
             File file = jfc.getSelectedFile();
-            if (null != file && jl.getSelectedValue()!=null) {
-                myLocker.retrieveFile(jl.getSelectedValue(), file.getAbsolutePath());
-                JOptionPane.showInternalMessageDialog(null, "Retrieve File Successfully", "DeDuplicator",
-                        JOptionPane.INFORMATION_MESSAGE);
+            if (result == jfc.APPROVE_OPTION) {
+                if (jl.getSelectedValue() != null) {
+                    myLocker.retrieveFile(jl.getSelectedValue(), file.getAbsolutePath());
+                    JOptionPane.showInternalMessageDialog(null, "Retrieve File Successfully", "DeDuplicator",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else
+                    JOptionPane.showInternalMessageDialog(null, "File does not exist", "DeDuplicator",
+                            JOptionPane.INFORMATION_MESSAGE);
             }
-            else
-                JOptionPane.showInternalMessageDialog(null, "File does not exist", "DeDuplicator",
-                        JOptionPane.INFORMATION_MESSAGE);
         });
         deletion.addActionListener(ActionEvent->{
             if (null != jl.getSelectedValue()){
@@ -161,7 +157,8 @@ public class GUI extends JFrame {
         frame.add(ALB);
         frame.add(RFI);
         frame.add(jt);
-        frame.add(jl);
+//        frame.add(jl);
+        frame.add(sp);
         frame.add(jc);
         frame.setVisible(true);
 
@@ -171,16 +168,19 @@ public class GUI extends JFrame {
         AFB.addActionListener(ActionEvent -> {       // choose file
             JFileChooser jfc = new JFileChooser();
             jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-            jfc.showDialog(new JLabel(), "Choose");
-            File file = jfc.getSelectedFile();
-            if (myLocker.containsFile(file.getName()))
-                JOptionPane.showInternalMessageDialog(null, "Filename already exists", "DeDuplicator",
-                        JOptionPane.INFORMATION_MESSAGE);
-            else if (null != file) {
-                myLocker.addFile(file.getAbsolutePath(), "");
-                JOptionPane.showInternalMessageDialog(null, "Add file successfully", "DeDuplicator",
-                        JOptionPane.INFORMATION_MESSAGE);
-                JlistSetElement(myLocker);
+            int result = jfc.showDialog(new JLabel(), "Choose");
+            if (result == jfc.APPROVE_OPTION) {
+                File file = jfc.getSelectedFile();
+                if (myLocker.containsFile("/"+file.getName()))
+                    JOptionPane.showInternalMessageDialog(null, "Filename already exists", "DeDuplicator",
+                            JOptionPane.INFORMATION_MESSAGE);
+                else  {
+                    myLocker.addFile(file.getAbsolutePath(), "");
+                    JOptionPane.showInternalMessageDialog(null, "Add file successfully", "DeDuplicator",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    JlistSetElement(myLocker);
+
+                }
             }
         });
     }
@@ -204,12 +204,13 @@ public class GUI extends JFrame {
     public void RFIInit(){
         RFI.setBounds(160, 160, 120, 50);
         RFI.addActionListener(ActionEvent -> {       // retrieve file
-            System.out.println(myLocker.retrieveFileInfo());
+            System.out.println(myLocker.getMetaData().files.keySet());
         });
     }
 
     public void jlInit(){
-        jl.setBounds(10, 90, 150, 150);
+//        jl.setBounds(10, 90, 150, 150);
+        myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.FIXEDSIZE);
         jl.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -221,5 +222,12 @@ public class GUI extends JFrame {
         });
         JlistSetElement(myLocker);
     }
+
+    public void spInit(){
+        sp.setBounds(10, 90, 150, 150);
+        sp.setViewportView(jl);
+
+    }
+
 
 }
