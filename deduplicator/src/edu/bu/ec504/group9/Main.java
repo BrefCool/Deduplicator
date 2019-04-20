@@ -13,15 +13,18 @@ public class Main {
         /** have to  initialize FileIO first, this will create lockers and chunks directory */
 	    FileIO.initialize();
 
-//	    GUI gui = new GUI();
+	    GUI gui = new GUI();
 
 	    /** get locker, each locker is a independent storage system */
-	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.ROLLING);
+//	    Locker myLocker = LockerFactory.getLocker("myLocker", LockerFactory.CHUNKING.ROLLING);
 
-	    List<String> result =  myLocker.SSS("t");
-	    for (String s : result){
-	        System.out.println(s);
-        }
+//	    List<String> result =  myLocker.SSS("t");
+//	    for (String s : result){
+//	        System.out.println(s);
+//        }
+
+//		FileIO.exportLocker("myLocker", "/home/yuxuansu/study/EC504/test_output");
+//		FileIO.importLocker("/home/yuxuansu/study/EC504/test_output/myLocker");
 
 //	    myLocker.addFile("/home/yuxuansu/study/EC504/test", "");
 //        System.out.println("before delete:");

@@ -25,6 +25,8 @@ public class GUI extends JFrame {
     String lockerDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
             .add("lockers").toString();
     JScrollPane sp = new JScrollPane();
+    JButton ExportButton = new JButton("Export");
+    JButton ImportButton = new JButton("Import");
 
     public GUI() {
         FileIO.initialize();
@@ -48,6 +50,7 @@ public class GUI extends JFrame {
         RFIInit();
         spInit();
         framInit();
+        ImportExportBtnInit();
         frame.add(RB);
 
     }
@@ -150,7 +153,7 @@ public class GUI extends JFrame {
     }
 
     public void framInit(){
-        frame.setBounds(700, 300, 300, 300);
+        frame.setBounds(700, 300, 300, 400);
         frame.setLayout(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // set exit function
         frame.add(AFB);  // add button to box
@@ -160,6 +163,8 @@ public class GUI extends JFrame {
 //        frame.add(jl);
         frame.add(sp);
         frame.add(jc);
+        frame.add(ExportButton);
+        frame.add(ImportButton);
         frame.setVisible(true);
 
     }
@@ -227,6 +232,31 @@ public class GUI extends JFrame {
         sp.setBounds(10, 90, 150, 150);
         sp.setViewportView(jl);
 
+    }
+
+    public void ImportExportBtnInit() {
+        ExportButton.setBounds(10, 250, 120, 50);
+        ImportButton.setBounds(160, 250, 120, 50);
+        ExportButton.addActionListener(ActionEvent -> {       // choose file
+            JFileChooser jfc = new JFileChooser();
+            jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            int result = jfc.showDialog(new JLabel(), "Choose");
+            if (result == jfc.APPROVE_OPTION) {
+                File file = jfc.getSelectedFile();
+                String lockerName = (String)jc.getSelectedItem();
+                FileIO.exportLocker(lockerName, file.getAbsolutePath());
+            }
+        });
+        ImportButton.addActionListener(ActionEvent -> {       // choose file
+            JFileChooser jfc = new JFileChooser();
+            jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+            int result = jfc.showDialog(new JLabel(), "Choose");
+            if (result == jfc.APPROVE_OPTION) {
+                File file = jfc.getSelectedFile();
+                FileIO.importLocker(file.getAbsolutePath());
+                jcReset();
+            }
+        });
     }
 
 
