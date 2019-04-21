@@ -28,7 +28,7 @@ public class GUI extends JFrame {
     JScrollPane sp1 = new JScrollPane();
     JButton ExportButton = new JButton("Export");
     JButton ImportButton = new JButton("Import");
-    JButton RB = new JButton("SubString Search");
+    JButton RB = new JButton("Search");
     JTextArea jta = new JTextArea();
     List<String> result = new ArrayList<>();
     JScrollPane sp2 = new JScrollPane();
@@ -212,7 +212,7 @@ public class GUI extends JFrame {
 
     public void jlInit(){
 //        jl.setBounds(10, 90, 150, 150);
-        myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.FIXEDSIZE);
+        myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.ROLLING);
         jl.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -259,7 +259,7 @@ public class GUI extends JFrame {
     public void RBInit(){
         RB.setBounds(160, 160, 120, 50);
         RB.addActionListener(ActionEvent -> {       // retrieve file
-            myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.FIXEDSIZE);
+            myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.ROLLING);
             result = myLocker.SSS(jt2.getText());
             StringJoiner sj = new StringJoiner("\n");
             sj.add("Substring found in:");

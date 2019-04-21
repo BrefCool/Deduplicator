@@ -14,25 +14,50 @@ public class CmdLineArgs {
         int z = 0;
         int w = 0;
 
+        if (count <= 0) {
+            System.out.println("no arguments exists");
+            return;
+        }
+
         /** search for key words "locker name,addfile name, retrieve file name and output path */
         for (int i = 0; i < count; i++) {
-            if (args[i].contains("-locker")) {
+            if (args[i].equals("-locker")) {
                 x = i + 1;
-            } else if (args[i].contains("-addFile")) {
+                if (x < count) {
+                    System.out.println("lockername is needed after '-locker'");
+                    return;
+                }
+            } else if (args[i].equals("-addFile")) {
                 y = i + 1;
-            } else if (args[i].contains("-retrieveFile")) {
+                if (y < count) {
+                    System.out.println("filename is needed after '-addFile'");
+                    return;
+                }
+            } else if (args[i].equals("-retrieveFile")) {
                 z = i + 1;
-            } else if (args[i].contains("-output")) {
+                if (z < count) {
+                    System.out.println("filename is needed after '-retrieveFile'");
+                    return;
+                }
+            } else if (args[i].equals("-output")) {
                 w = i + 1;
+                if (w < count) {
+                    System.out.println("output path is needed after '-output'");
+                    return;
+                }
+            } else if (args[i].equals("-gui")) {
+                GUI gui = new GUI();
+                return;
             }
         }
-            String lockerName = args[x];
-            String addFileName = args[y];
-            String retrieveFileName = args[z];
-            String filepath = args[w];
+
+        String lockerName = args[x];
+        String addFileName = args[y];
+        String retrieveFileName = args[z];
+        String filepath = args[w];
 
             /** instantiate locker */
-            Locker myLocker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.FIXEDSIZE);
+            Locker myLocker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.ROLLING);
 
             /** do operations */
             if (y != 0) {

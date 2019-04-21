@@ -12,6 +12,7 @@ addfilename=""
 retfilename=""
 lockername=""
 output=""
+gui=""
 jarpath="$(dirname $(readlink -f $0))/deduplicator.jar"
 
 # SOURCE="${BASH_SOURCE[0]}"
@@ -25,6 +26,10 @@ jarpath="$(dirname $(readlink -f $0))/deduplicator.jar"
 
 while :; do
     case $1 in
+    	-gui)
+			gui="true"
+			break
+			;;
         -addFile)
             if [ "$2" ]; then
             	if [ -n "${retfilename}" ]; then
@@ -89,7 +94,10 @@ while :; do
     shift
 done
 
-if [ -n "${addfilename}" ];
+if [ -n "${gui}" ];
+then
+	java -jar $jarpath -gui
+elif [ -n "${addfilename}" ];
 then
 	if [ -n "${lockername}" ];
 	then
