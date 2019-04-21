@@ -14,15 +14,15 @@ import javax.swing.*;
 
 
 public class GUI extends JFrame {
-    JFrame frame = new JFrame("DeDuplicator");
+    JFrame frame = new JFrame("DeDuplicator"); //add frame
     JButton AFB = new JButton("Add File");  // add addfile button
-    JTextField jt = new JTextField();
-    JButton ALB = new JButton("Add Locker");
-    JPopupMenu menu = new JPopupMenu();
-    JTextField jt2 = new JTextField("search");
-    Locker myLocker = LockerFactory.getLocker("default", LockerFactory.CHUNKING.ROLLING);
-    JList<String> jl = new JList<>();
-    JComboBox<String> jc = new JComboBox<>();
+    JTextField jt = new JTextField(); // add locker text
+    JButton ALB = new JButton("Add Locker"); // add locker button
+    JPopupMenu menu = new JPopupMenu(); //right click menu
+    JTextField jt2 = new JTextField("search"); // button for searching
+    Locker myLocker = LockerFactory.getLocker("default", LockerFactory.CHUNKING.ROLLING);//set default locker
+    JList<String> jl = new JList<>();  // list for files
+    JComboBox<String> jc = new JComboBox<>(); // ComboBox for locker selection
     String lockerDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
             .add("lockers").toString();
     JScrollPane sp1 = new JScrollPane();
@@ -35,7 +35,7 @@ public class GUI extends JFrame {
 
     public GUI() {
         FileIO.initialize();
-        init();
+        init(); //GUI init
 
     }
     public void init() {
@@ -54,7 +54,7 @@ public class GUI extends JFrame {
         ImportExportBtnInit();
 
     }
-
+    //Fuction for Jlist Elements
     public void addFileDirElements(LockerMeta meta, DefaultListModel dlm, String filename) {
         HashMap<String, FileInfo> files = meta.files;
         HashMap<String, ArrayList<String>> directories = meta.directorys;
@@ -71,7 +71,7 @@ public class GUI extends JFrame {
                 addFileDirElements(meta, dlm, subFile);
         }
     }
-
+    //Reset Jlist Elements
     public void JlistSetElement(Locker locker) {
         DefaultListModel dlm = new DefaultListModel();
         LockerMeta meta = locker.getMetaData();
@@ -82,7 +82,7 @@ public class GUI extends JFrame {
 
         jl.setModel(dlm);
     }
-
+    //ComboList init
     public void jcInit(){
         jc.removeAllItems();
         jc.setBounds(10,60,150,30);
@@ -90,13 +90,13 @@ public class GUI extends JFrame {
         File[] fs = file.listFiles();
         if (fs!=null) {
             for (File f : fs) {
-                String fname = f.getName();
-                String suffix = fname.substring(fname.lastIndexOf(".") + 1);
-                if (!f.isDirectory() && !suffix.equals("DS_Store"))
+                String fname = f.getName(); //get file names from locker
+                String suffix = fname.substring(fname.lastIndexOf(".") + 1); //get last name
+                if (!f.isDirectory() && !suffix.equals("DS_Store"))  // ignore DS_Store
                     jc.addItem(f.getName());
             }
         }
-        jc.addActionListener(new ActionListener() {
+        jc.addActionListener(new ActionListener() {//change locker when select
             @Override
             public void actionPerformed(ActionEvent e) {
                 String locker = (String) jc.getSelectedItem();
@@ -106,7 +106,7 @@ public class GUI extends JFrame {
             }
         });
     }
-
+    //reset combolist
     public void jcReset(){
         jc.removeAllItems();
         File file = new File(lockerDir);
@@ -126,7 +126,7 @@ public class GUI extends JFrame {
     public void initJMenu() {
         JMenuItem retrieve = new JMenuItem("Retrieve");
         JMenuItem deletion = new JMenuItem("Delete");
-        retrieve.addActionListener(ActionEvent->{
+        retrieve.addActionListener(ActionEvent->{//connect retrieve function
             JFileChooser jfc = new JFileChooser();
             jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int result = jfc.showDialog(new JLabel(), "Choose");
@@ -139,7 +139,7 @@ public class GUI extends JFrame {
                     jta.setText("File does not exist");
             }
         });
-        deletion.addActionListener(ActionEvent->{
+        deletion.addActionListener(ActionEvent->{//connect deletion function
             if (null != jl.getSelectedValue()){
                 myLocker.deleteFile(jl.getSelectedValue());
                 JlistSetElement(myLocker);
@@ -170,7 +170,7 @@ public class GUI extends JFrame {
         frame.setVisible(true);
 
     }
-    public void AFBInit(){
+    public void AFBInit(){ // add file button
         AFB.setBounds(160, 60, 120, 50);
         AFB.addActionListener(ActionEvent -> {       // choose file
             JFileChooser jfc = new JFileChooser();
@@ -190,13 +190,13 @@ public class GUI extends JFrame {
         });
     }
 
-    public void jtInit(){
+    public void jtInit(){ // locker text
         jt.setText("default");
         jt.setBounds(10, 10, 150, 50);
         jt.setFont(new Font("default", Font.BOLD, 18));
     }
 
-    public void ALBInit(){
+    public void ALBInit(){ // add locker button
         ALB.setBounds(160, 10, 120, 50);
         ALB.addActionListener(ActionEvent -> {
             System.out.println("text:" + jt.getText());
@@ -206,11 +206,11 @@ public class GUI extends JFrame {
         });
     }
 
-    public void jt2Init(){
+    public void jt2Init(){ // searching text
         jt2.setBounds(160, 110, 120, 50);
     }
 
-    public void jlInit(){
+    public void jlInit(){ // file list
 //        jl.setBounds(10, 90, 150, 150);
         myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.ROLLING);
         jl.addMouseListener(new MouseAdapter() {
@@ -225,7 +225,7 @@ public class GUI extends JFrame {
         JlistSetElement(myLocker);
     }
 
-    public void sp1Init(){
+    public void sp1Init(){ // ScrollPane for file list
         sp1.setBounds(10, 90, 150, 150);
         sp1.setViewportView(jl);
 
@@ -256,7 +256,7 @@ public class GUI extends JFrame {
         });
     }
 
-    public void RBInit(){
+    public void RBInit(){ // SubString Search button
         RB.setBounds(160, 160, 120, 50);
         RB.addActionListener(ActionEvent -> {       // retrieve file
             myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.ROLLING);
@@ -270,14 +270,14 @@ public class GUI extends JFrame {
         });
     }
 
-    public void jtaInit(){
+    public void jtaInit(){  // info text area
 //        jta.setBounds(10,320,270,150);
         jta.setEditable(false);
         jta.setColumns(20);
         jta.setLineWrap(true);
     }
 
-    public void sp2Init(){
+    public void sp2Init(){ // ScrollPane for info text area
         sp2.setBounds(10,320,270,150);
         sp2.setViewportView(jta);
     }

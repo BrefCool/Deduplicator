@@ -16,8 +16,6 @@ public class KMP {
                 next[j] = k;
             } else {
 
-                // 比较到第K个字符，说明p[0——k-1]字符串和p[j-k——j-1]字符串相等，而next[k]表示
-                // p[0——k-1]的前缀和后缀的最长共有长度，所接下来可以直接比较p[next[k]]和p[j]
                 k = next[k];
             }
         }
@@ -55,11 +53,6 @@ public class KMP {
         }
         return false;
     }
-
-    /**
-     * @param args
-     */
-
 
 }
 
