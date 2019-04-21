@@ -23,25 +23,25 @@ public class CmdLineArgs {
         for (int i = 0; i < count; i++) {
             if (args[i].equals("-locker")) {
                 x = i + 1;
-                if (x < count) {
+                if (x >= count) {
                     System.out.println("lockername is needed after '-locker'");
                     return;
                 }
             } else if (args[i].equals("-addFile")) {
                 y = i + 1;
-                if (y < count) {
+                if (y >= count) {
                     System.out.println("filename is needed after '-addFile'");
                     return;
                 }
             } else if (args[i].equals("-retrieveFile")) {
                 z = i + 1;
-                if (z < count) {
+                if (z >= count) {
                     System.out.println("filename is needed after '-retrieveFile'");
                     return;
                 }
             } else if (args[i].equals("-output")) {
                 w = i + 1;
-                if (w < count) {
+                if (w >= count) {
                     System.out.println("output path is needed after '-output'");
                     return;
                 }
@@ -57,7 +57,7 @@ public class CmdLineArgs {
         String filepath = args[w];
 
             /** instantiate locker */
-            Locker myLocker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.ROLLING);
+            Locker myLocker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.FIXEDSIZE);
 
             /** do operations */
             if (y != 0) {
