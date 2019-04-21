@@ -7,6 +7,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.StringJoiner;
 import javax.swing.*;
 
@@ -18,15 +19,19 @@ public class GUI extends JFrame {
     JTextField jt = new JTextField();
     JButton ALB = new JButton("Add Locker");
     JPopupMenu menu = new JPopupMenu();
-    JButton RFI = new JButton("Retrieve FileInfo");
+    JTextField jt2 = new JTextField("search");
     Locker myLocker = LockerFactory.getLocker("default", LockerFactory.CHUNKING.ROLLING);
     JList<String> jl = new JList<>();
     JComboBox<String> jc = new JComboBox<>();
     String lockerDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
             .add("lockers").toString();
-    JScrollPane sp = new JScrollPane();
+    JScrollPane sp1 = new JScrollPane();
     JButton ExportButton = new JButton("Export");
     JButton ImportButton = new JButton("Import");
+    JButton RB = new JButton("SubString Search");
+    JTextArea jta = new JTextArea();
+    List<String> result = new ArrayList<>();
+    JScrollPane sp2 = new JScrollPane();
 
     public GUI() {
         FileIO.initialize();
@@ -34,24 +39,19 @@ public class GUI extends JFrame {
 
     }
     public void init() {
-
-        JButton RB = new JButton("SubString Search");
-        RB.setBounds(160, 110, 120, 50);
-        RB.addActionListener(ActionEvent -> {       // retrieve file
-            myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.FIXEDSIZE);
-            System.out.println(myLocker.SSS(jt.getText()));
-        });
         jcInit();
         initJMenu();
         AFBInit();
         ALBInit();
         jlInit();
         jtInit();
-        RFIInit();
-        spInit();
+        jt2Init();
+        sp1Init();
+        sp2Init();
+        RBInit();
+        jtaInit();
         framInit();
         ImportExportBtnInit();
-        frame.add(RB);
 
     }
 
@@ -134,17 +134,16 @@ public class GUI extends JFrame {
             if (result == jfc.APPROVE_OPTION) {
                 if (jl.getSelectedValue() != null) {
                     myLocker.retrieveFile(jl.getSelectedValue(), file.getAbsolutePath());
-                    JOptionPane.showInternalMessageDialog(null, "Retrieve File Successfully", "DeDuplicator",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    jta.setText("Retrieve File Successfully");
                 } else
-                    JOptionPane.showInternalMessageDialog(null, "File does not exist", "DeDuplicator",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    jta.setText("File does not exist");
             }
         });
         deletion.addActionListener(ActionEvent->{
             if (null != jl.getSelectedValue()){
                 myLocker.deleteFile(jl.getSelectedValue());
                 JlistSetElement(myLocker);
+                jta.setText("Delete file successfully");
                 //System.out.println("123");
             }
         });
@@ -153,18 +152,21 @@ public class GUI extends JFrame {
     }
 
     public void framInit(){
-        frame.setBounds(700, 300, 300, 400);
+        frame.setBounds(700, 300, 300, 500);
         frame.setLayout(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // set exit function
         frame.add(AFB);  // add button to box
         frame.add(ALB);
-        frame.add(RFI);
+        frame.add(jt2);
         frame.add(jt);
+        frame.add(RB);
 //        frame.add(jl);
-        frame.add(sp);
+        frame.add(sp1);
+        frame.add(sp2);
         frame.add(jc);
         frame.add(ExportButton);
         frame.add(ImportButton);
+//        frame.add(jta);
         frame.setVisible(true);
 
     }
@@ -177,12 +179,10 @@ public class GUI extends JFrame {
             if (result == jfc.APPROVE_OPTION) {
                 File file = jfc.getSelectedFile();
                 if (myLocker.containsFile("/"+file.getName()))
-                    JOptionPane.showInternalMessageDialog(null, "Filename already exists", "DeDuplicator",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    jta.setText("Filename already exists");
                 else  {
                     myLocker.addFile(file.getAbsolutePath(), "");
-                    JOptionPane.showInternalMessageDialog(null, "Add file successfully", "DeDuplicator",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    jta.setText("Add file successfully");
                     JlistSetElement(myLocker);
 
                 }
@@ -206,11 +206,8 @@ public class GUI extends JFrame {
         });
     }
 
-    public void RFIInit(){
-        RFI.setBounds(160, 160, 120, 50);
-        RFI.addActionListener(ActionEvent -> {       // retrieve file
-            System.out.println(myLocker.getMetaData().files.keySet());
-        });
+    public void jt2Init(){
+        jt2.setBounds(160, 110, 120, 50);
     }
 
     public void jlInit(){
@@ -228,9 +225,9 @@ public class GUI extends JFrame {
         JlistSetElement(myLocker);
     }
 
-    public void spInit(){
-        sp.setBounds(10, 90, 150, 150);
-        sp.setViewportView(jl);
+    public void sp1Init(){
+        sp1.setBounds(10, 90, 150, 150);
+        sp1.setViewportView(jl);
 
     }
 
@@ -259,5 +256,30 @@ public class GUI extends JFrame {
         });
     }
 
+    public void RBInit(){
+        RB.setBounds(160, 160, 120, 50);
+        RB.addActionListener(ActionEvent -> {       // retrieve file
+            myLocker = LockerFactory.getLocker((String)jc.getSelectedItem(), LockerFactory.CHUNKING.FIXEDSIZE);
+            result = myLocker.SSS(jt2.getText());
+            StringJoiner sj = new StringJoiner("\n");
+            sj.add("Substring found in:");
+            for (String filename:result){
+                sj.add(filename+";");
+            }
+            jta.setText(sj.toString());
+        });
+    }
+
+    public void jtaInit(){
+//        jta.setBounds(10,320,270,150);
+        jta.setEditable(false);
+        jta.setColumns(20);
+        jta.setLineWrap(true);
+    }
+
+    public void sp2Init(){
+        sp2.setBounds(10,320,270,150);
+        sp2.setViewportView(jta);
+    }
 
 }

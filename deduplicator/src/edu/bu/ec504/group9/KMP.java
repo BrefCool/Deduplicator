@@ -1,86 +1,65 @@
 package edu.bu.ec504.group9;
-class KMP {
-    public boolean KMPSearch(String pat, String txt)
-    {
-        int M = pat.length();
-        int N = txt.length();
 
-        // create lps[] that will hold the longest
-        // prefix suffix values for pattern
-        int lps[] = new int[M];
-        int j = 0; // index for pat[]
+public class KMP {
 
-        // Preprocess the pattern (calculate lps[]
-        // array)
-        computeLPSArray(pat, M, lps);
+    public void getNext(String pattern, int next[]) {
+        int j = 0;
+        int k = -1;
+        int len = pattern.length();
+        next[0] = -1;
 
-        int i = 0; // index for txt[]
-        while (i < N) {
-            if (pat.charAt(j) == txt.charAt(i)) {
+        while (j < len - 1) {
+            if (k == -1 || pattern.charAt(k) == pattern.charAt(j)) {
+
                 j++;
-                i++;
+                k++;
+                next[j] = k;
+            } else {
+
+                // 比较到第K个字符，说明p[0——k-1]字符串和p[j-k——j-1]字符串相等，而next[k]表示
+                // p[0——k-1]的前缀和后缀的最长共有长度，所接下来可以直接比较p[next[k]]和p[j]
+                k = next[k];
             }
-            if (j == M) {
-//                System.out.println("Found pattern "
-//                        + "at index " + (i - j));
-                j = lps[j - 1];
-                return true;
+        }
+
+    }
+
+    public boolean kmp(String s, String pattern) {
+        int i = 0;
+        int j = 0;
+        int slen = s.length();
+        int plen = pattern.length();
+
+        int[] next = new int[plen];
+
+        getNext(pattern, next);
+
+        while (i < slen && j < plen) {
+
+            if (s.charAt(i) == pattern.charAt(j)) {
+                i++;
+                j++;
+            } else {
+                if (next[j] == -1) {
+                    i++;
+                    j = 0;
+                } else {
+                    j = next[j];
+                }
+
             }
 
-            // mismatch after j matches
-            else if (i < N && pat.charAt(j) != txt.charAt(i)) {
-                // Do not match lps[0..lps[j-1]] characters,
-                // they will match anyway
-                if (j != 0)
-                    j = lps[j - 1];
-                else
-                    i = i + 1;
+            if (j == plen) {
+                return true;
             }
         }
         return false;
     }
 
-    private void computeLPSArray(String pat, int M, int lps[])
-    {
-        // length of the previous longest prefix suffix
-        int len = 0;
-        int i = 1;
-        lps[0] = 0; // lps[0] is always 0
+    /**
+     * @param args
+     */
 
-        // the loop calculates lps[i] for i = 1 to M-1
-        while (i < M) {
-            if (pat.charAt(i) == pat.charAt(len)) {
-                len++;
-                lps[i] = len;
-                i++;
-            }
-            else // (pat[i] != pat[len])
-            {
-                // This is tricky. Consider the example.
-                // AAACAAAA and i = 7. The idea is similar
-                // to search step.
-                if (len != 0) {
-                    len = lps[len - 1];
 
-                    // Also, note that we do not increment
-                    // i here
-                }
-                else // if (len == 0)
-                {
-                    lps[i] = len;
-                    i++;
-                }
-            }
-        }
-    }
-
-    // Driver program to test above function
-//    public static void main(String args[])
-//    {
-//        String txt = "123453";
-//        String pat = "3";
-//        if (new KMP().KMPSearch(pat, txt))
-//            System.out.println("123");
-//        else System.out.println("456");
-//    }
 }
+

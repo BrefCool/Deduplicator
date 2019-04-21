@@ -272,12 +272,10 @@ public class Locker {
   public List<String> SSS(String txt2search){
         List<String> filelist = new ArrayList<>();
         String FileName;
-        String filetxt;
         String chunktxt;
         KMP kmp = new KMP();
         for (String key : metaData.files.keySet()){
-            filetxt = new String("");
-
+            StringBuilder sb = new StringBuilder();
             FileInfo info = metaData.files.get(key);
             if (info == null)
                 continue;
@@ -285,13 +283,13 @@ public class Locker {
             for (String hash : hashes) {
                 Chunk chunk = getChunk(hash);
                 chunktxt = new String(chunk.getData());
-                filetxt = filetxt + chunktxt;
+                sb.append(chunktxt);
             }
 
-            System.out.println(key + ":");
-            System.out.println(filetxt);
+//            System.out.println(key + ":");
+//            System.out.println(filetxt);
 
-            if (kmp.KMPSearch(filetxt,txt2search))
+            if (kmp.kmp(sb.toString(),txt2search))
                 filelist.add(key);
         }
 
