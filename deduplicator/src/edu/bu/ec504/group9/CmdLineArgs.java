@@ -57,7 +57,7 @@ public class CmdLineArgs {
         String filepath = args[w];
 
             /** instantiate locker */
-            Locker myLocker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.FIXEDSIZE);
+            Locker myLocker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.ROLLING);
 
             /** do operations */
             if (y != 0) {
