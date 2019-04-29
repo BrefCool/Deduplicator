@@ -13,6 +13,7 @@ Our goal is to design and implement an efficient data storage locker that utiliz
 ### System Design and Data Structures
 There's an overview of the whole deduplicator system:  
 <img src="./images/prototype.png">  
+**All the chunks and metadata will be stored into `$HOME/.dedupStore` directory.**
 #### FileInfo and Chunk class:
 In order to save one file's metadata, we define a class called FileInfo:  
 <img src="./images/FileInfo.PNG">  
@@ -42,30 +43,33 @@ Chunking Module is mainly used to implement chunking algorithm. It will split th
   To retrieve files, we'd traverse all chunks consist of target file(Stored in a Fileinfo class instance as a LinkedList) and use FileOutputStream to make a new file.
 3. Locker should be portable.  
   Locker's data can be easily imported or exported by clicking the 'import' and 'export' button in our program. All the locker's metadata and all the related chunks will be exported or imported. 
-4. Command-line UI.
+4. Command-line UI.  
+
+Commands: dedup -addFile <file name> -locker <locker name> and dedup -retieveFile <file name> -output <where the retrieved file should be saved> -locker <locker name>. are available. The gui command is also available if user want to launch GUI. See Install.MD for details.
+
+**All the chunks and metadata will be stored into `$HOME/.dedupStore` directory.**
+
 #### Advanced Features
 1. Ability to efficiently store similar images.  
   For images and videos, we implemente the Rabin–Karp algorithm(content-defined chunking) with rolling hash. We set the average chunk size into 8 KB and a window size of 64 Bytes. Then this window would traverse the whole file and use rolling hash
    to efficiently calculate the hashvalue for every part and make a new chunk when the last 13 bits equal to 0. So the chunk size would automatically adjust according to the content in files and significantly improve the deduplication rate.
 2. Ability to efficiently store similar videos.
-3. Develop networked access to your locker.
+3. Develop networked access to your locker.  
+  Failed. Was thinking and trying to use Tomcat to build the servlet that can execute the command lines:  dedup -addFile <file name> -locker <locker name> and dedup -retieveFile <file name> -output <where the retrieved file should be saved> -locker <locker name>. But the learning process is way beyond expectation and none of us has java web experience before. For retrieving file method on server, it is also hard to accomplish because the server needs to identify and collect user local chunk and locker information. The target file will be uploaded to the server first and then the user can retrieve the origin file and download from the web again. 
 
-Failed. Was thinking and trying to use Tomcat to build the servlet that can execute the command lines:  dedup -addFile <file name> -locker <locker name> and dedup -retieveFile <file name> -output <where the retrieved file should be saved> -locker <locker name>. But the learning process is way beyond expectation and none of us has java web experience before. For retrieving file method on server, it is also hard to accomplish because the server needs to identify and collect user local chunk and locker information. The target file will be uploaded to the server first and then the user can retrieve the origin file and download from the web again. 
-
-4. Develop a GUI.
+4. Develop a GUI.   
+  Basically, it connects all different file modules together. GUI visualizes all available functions to the user. User can customize locker, add file, retrieve file, delete file and do substring search. 
 
 5. Ability to store directories of files as one entity.  
   This function is mainly for users with directories of files instead of single file. Before storing the file/directory, we will check wether the storing target is a file or directory. If the target is directory, we will store the path of directory and its child directory and all the files it contains in a hashMap. Instead of storing the directory directly, we only store the files and save the path of the files to guarantee to retrieve them with the same directory stucture.
   In order to do this, when retrieving file/directory, we iterate value corresponding to the path in the hashMap, and then retrieve the file directly and create that directroy when it is a directory.
 
-6. Implement file deletion from your locker.
+6. Implement file deletion from your locker.  
+  If the filename is not a directory, remove the target file directly and remove chunk through hashes. If it is a directory, delete the file in the locker list and remove the file as before. If this file belongs to one directory, remove this file from the directory.
 
-If the filename is not a directory, remove the target file directly and remove chunk through hashes. If it is a directory, delete the file in the locker list and remove the file as before. If this file belongs to one directory, remove this file from the directory.
-
-7. Implement efficient substring search.
-
-For substring search, we implement the KMP algorithm to search efficiently inside every locker. For each locker, we will retrieve every file inside to make sure that we could go through every character.
- At last it will return a list with files, which include the string we want to search.
+7. Implement efficient substring search.  
+  For substring search, we implement the KMP algorithm to search efficiently inside every locker. For each locker, we will retrieve every file inside to make sure that we could go through every character.  
+    At last it will return a list with files, which include the string we want to search.
 
 ### References & materials
 | Citation | Annotation |
@@ -115,6 +119,8 @@ TestfileCreator.createTestFile()
 * You could see the test file folder in your current directory.
 
 3. All testing code utilized to observe the correctness of your code.
+
+Similar to the last section. We also use TestfileCreator.py to test our java code. It randomly generates text files that we can use to test our adding, retrieving and deleting files. By retrieving the text file, we are able to know the correctness of our code. And for the same purpose of images and videos(Users can download similar images via https://drive.google.com/open?id=1QqMAYOtq8gpC45sd6r42-hMgl8tHzIzt, similar videos via https://drive.google.com/open?id=1YKli1d2lcBiNhBavk5Iz1ESK2mhWpkGo. For both dataset, half of them are original images/videos and another half has been randomly added some breakpoints (like green lines in images).
 
 ## III. Work Breakdown  
 

@@ -5,10 +5,13 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.locks.Lock;
 import javax.swing.*;
 
 
@@ -25,6 +28,10 @@ public class GUI extends JFrame {
     JComboBox<String> jc = new JComboBox<>(); // ComboBox for locker selection
     String lockerDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
             .add("lockers").toString();
+    String chunkDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
+            .add("chunks").toString();
+    String chunkinfoDir = new StringJoiner(File.separator).add(System.getProperty("user.home")).add(".dedupStore")
+            .add("chunks").add("chunksInfo").toString();
     JScrollPane sp1 = new JScrollPane();
     JButton ExportButton = new JButton("Export");
     JButton ImportButton = new JButton("Import");
@@ -32,6 +39,7 @@ public class GUI extends JFrame {
     JTextArea jta = new JTextArea();
     List<String> result = new ArrayList<>();
     JScrollPane sp2 = new JScrollPane();
+    JLabel jLabel = new JLabel();
 
     public GUI() {
         FileIO.initialize();
@@ -51,6 +59,7 @@ public class GUI extends JFrame {
         RBInit();
         jtaInit();
         framInit();
+        JlabelInit();
         ImportExportBtnInit();
 
     }
@@ -103,6 +112,7 @@ public class GUI extends JFrame {
                 if (locker != null && !locker.equals(""))
                     myLocker = LockerFactory.getLocker(locker,LockerFactory.CHUNKING.ROLLING);
                 JlistSetElement(myLocker);
+                setJlable();
             }
         });
     }
@@ -144,6 +154,7 @@ public class GUI extends JFrame {
                 myLocker.deleteFile(jl.getSelectedValue());
                 JlistSetElement(myLocker);
                 jta.setText("Delete file successfully");
+                setJlable();
                 //System.out.println("123");
             }
         });
@@ -152,7 +163,7 @@ public class GUI extends JFrame {
     }
 
     public void framInit(){
-        frame.setBounds(700, 300, 300, 500);
+        frame.setBounds(700, 300, 300, 550);
         frame.setLayout(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // set exit function
         frame.add(AFB);  // add button to box
@@ -166,6 +177,7 @@ public class GUI extends JFrame {
         frame.add(jc);
         frame.add(ExportButton);
         frame.add(ImportButton);
+        frame.add(jLabel);
 //        frame.add(jta);
         frame.setVisible(true);
 
@@ -178,14 +190,16 @@ public class GUI extends JFrame {
             int result = jfc.showDialog(new JLabel(), "Choose");
             if (result == jfc.APPROVE_OPTION) {
                 File file = jfc.getSelectedFile();
-                if (myLocker.containsFile("/"+file.getName()))
-                    jta.setText("Filename already exists");
-                else  {
-                    myLocker.addFile(file.getAbsolutePath(), "");
-                    jta.setText("Add file successfully");
-                    JlistSetElement(myLocker);
+//                if (myLocker.containsFile("/"+file.getName()) || myLocker.containsFile(file.getAbsolutePath()))
+//                    jta.setText("Filename already exists");
+//                else  {
+                String re = new String("");
+                re = myLocker.addFile(file.getAbsolutePath(), "");
+                jta.setText(re);
+                JlistSetElement(myLocker);
+                setJlable();
 
-                }
+//                }
             }
         });
     }
@@ -281,5 +295,68 @@ public class GUI extends JFrame {
         sp2.setBounds(10,320,270,150);
         sp2.setViewportView(jta);
     }
+
+    public void JlabelInit(){
+        jLabel.setBounds(10,480,270,50);
+        setJlable();
+    }
+
+    public void setJlable(){
+        long size = getFolderSize(new File(chunkDir))/1024;
+        size = size - (new File(chunkinfoDir)).length()/1024;
+        double ratio;
+        long all = getLockerSize()/1024;
+        if (all != 0)
+            ratio = (double)size/(double)all;
+        else
+            ratio = 0;
+        NumberFormat nf  =  NumberFormat.getPercentInstance();
+        nf.setMinimumFractionDigits( 2 );
+        String ratioString;
+        ratioString = nf.format(ratio);
+        String chunksize = size/1024+"";
+        String lockersize = all/1024+"";
+
+        jLabel.setText("Chunk:"+chunksize+"MB "+"/File:"+lockersize+"MB "+" ratio:"+ratioString);
+
+    }
+
+    private long getLockerSize(){
+        long all = 0;
+        Locker locker;
+        File file = new File(lockerDir);
+        File[] fs = file.listFiles();
+        if (fs!=null) {
+            for (File f : fs) {
+                String fname = f.getName(); //get file names from locker
+                if (!fname.equals(".DS_Store")) {
+                    locker = LockerFactory.getLocker(fname, LockerFactory.CHUNKING.ROLLING);
+                    LockerMeta lockerMeta = locker.getMetaData();
+                    for (FileInfo info : lockerMeta.files.values()) {
+                        all = all + info.fileSize;
+                    }
+                }
+        }
+        }
+        return all;
+    }
+
+    private long getFolderSize(File folder) {
+        long length = 0;
+        File[] files = folder.listFiles();
+        if (files == null || files.length == 0){
+            return length;
+        }
+        for (File file : files) {
+            if (file.isFile()) {
+                length += file.length();
+            } else {
+                length += getFolderSize(file);
+            }
+        }
+        return length;
+    }
+
+
 
 }

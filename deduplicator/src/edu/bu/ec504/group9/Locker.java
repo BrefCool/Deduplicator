@@ -88,14 +88,14 @@ public class Locker {
     }
 
     /** add new file to this locker */
-    public void addFile(String filePath, String rootPath) {
+    public String addFile(String filePath, String rootPath) {
         /** para to check the filename is file or directory */
         File checkFileORDir = new File(filePath);
 
         /** check file exists */
         if (!checkFileORDir.exists()) {
             System.out.println("file doesn't exists");
-            return;
+            return "file doesn't exists";
         }
 
         /** extract filename */
@@ -112,7 +112,7 @@ public class Locker {
             /** set file metadata */
             if (containsFile(filename)) {
                 System.out.println("filename already exists");
-                return;
+                return "filename already exists";
             }
 
             /** initialize the file metadata */
@@ -134,7 +134,9 @@ public class Locker {
 
         }
         else if (checkFileORDir.isDirectory()) {
-            addDirectory(filePath, filename);
+            String re =new String("");
+            re = addDirectory(filePath, filename);
+            return re;
         }
 
         /** update chunkDB to disk */
@@ -142,6 +144,7 @@ public class Locker {
 
         /** update metadata to disk */
         updateFileInfo();
+        return "Add file successfully";
 
     }
 
@@ -197,11 +200,11 @@ public class Locker {
      * funtion to add files in the whole directory
      * @param dirPath
      */
-    public void addDirectory(String dirPath, String relPath) {
+    public String addDirectory(String dirPath, String relPath) {
 
         if (metaData.directorys.containsKey(relPath)) {
             System.out.println("directory has existed, please change a name");
-            return;
+            return "directory has existed, please change a name";
         }
 
         metaData.directorys.put(relPath,new ArrayList<>());
@@ -213,6 +216,7 @@ public class Locker {
             metaData.directorys.get(relPath).add(relPath+"/"+s[s.length-1]);
             addFile(absPath,relPath);
         }
+        return "Add file successfully";
     }
 
   public void deleteFile(String filename){
