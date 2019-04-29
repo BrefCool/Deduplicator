@@ -1,0 +1,52 @@
+c
+C
+iii
+
+outputpath/test.txt
+
+
+
+test
+   file1.txt
+   test
+       file2.txt
+       file3.txt
+
+
+/home/yuxuansu/test
+
+/home/yuxuansu
+
+test
+
+test/
+
+
+
+test/file1.txt: FileInfo
+test/test/file2.txt: FileInfo
+test/test/file3.txt: FileInfo
+
+{test: [test/file1.txt, test/test], test/test: [test/test/file2.txt]}  
+
+outputpath/test
+
+
+test
+
+file1.txt
+test
+
+test/file1.txt
+test/test
+
+file2.txt
+file3.txt
+
+
+
+
+
+test/test
+
+file1.txt

@@ -5,6 +5,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -36,6 +40,7 @@ public class GUI extends JFrame {
     JButton ExportButton = new JButton("Export");
     JButton ImportButton = new JButton("Import");
     JButton RB = new JButton("Search");
+    JButton delBtn = new JButton("Delete Locker");
     JTextArea jta = new JTextArea();
     List<String> result = new ArrayList<>();
     JScrollPane sp2 = new JScrollPane();
@@ -57,6 +62,7 @@ public class GUI extends JFrame {
         sp1Init();
         sp2Init();
         RBInit();
+        delBtnInit();
         jtaInit();
         framInit();
         JlabelInit();
@@ -91,6 +97,17 @@ public class GUI extends JFrame {
 
         jl.setModel(dlm);
     }
+
+    public void delBtnInit() {
+        delBtn.setBounds(160, 210, 120, 50);
+        delBtn.addActionListener(ActionEvent -> {       // retrieve file
+            String lockerName = (String) jc.getSelectedItem();
+            deleteLocker(lockerName);
+            jcReset();
+            setJlable();
+        });
+    }
+
     //ComboList init
     public void jcInit(){
         jc.removeAllItems();
@@ -163,7 +180,7 @@ public class GUI extends JFrame {
     }
 
     public void framInit(){
-        frame.setBounds(700, 300, 300, 550);
+        frame.setBounds(700, 300, 300, 570);
         frame.setLayout(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // set exit function
         frame.add(AFB);  // add button to box
@@ -171,6 +188,7 @@ public class GUI extends JFrame {
         frame.add(jt2);
         frame.add(jt);
         frame.add(RB);
+        frame.add(delBtn);
 //        frame.add(jl);
         frame.add(sp1);
         frame.add(sp2);
@@ -240,14 +258,14 @@ public class GUI extends JFrame {
     }
 
     public void sp1Init(){ // ScrollPane for file list
-        sp1.setBounds(10, 90, 150, 150);
+        sp1.setBounds(10, 90, 150, 170);
         sp1.setViewportView(jl);
 
     }
 
     public void ImportExportBtnInit() {
-        ExportButton.setBounds(10, 250, 120, 50);
-        ImportButton.setBounds(160, 250, 120, 50);
+        ExportButton.setBounds(10, 270, 120, 50);
+        ImportButton.setBounds(160, 270, 120, 50);
         ExportButton.addActionListener(ActionEvent -> {       // choose file
             JFileChooser jfc = new JFileChooser();
             jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -292,12 +310,12 @@ public class GUI extends JFrame {
     }
 
     public void sp2Init(){ // ScrollPane for info text area
-        sp2.setBounds(10,320,270,150);
+        sp2.setBounds(10,340,270,150);
         sp2.setViewportView(jta);
     }
 
     public void JlabelInit(){
-        jLabel.setBounds(10,480,270,50);
+        jLabel.setBounds(10,500,270,50);
         setJlable();
     }
 
@@ -358,5 +376,22 @@ public class GUI extends JFrame {
     }
 
 
-
+    private void deleteLocker(String lockerName) {
+        Locker locker = LockerFactory.getLocker(lockerName, LockerFactory.CHUNKING.ROLLING);
+        LockerMeta lockerMeta = locker.getMetaData();
+        ArrayList<String> filenames = new ArrayList<>();
+        for (String filename : lockerMeta.files.keySet()) {
+            filenames.add(filename);
+        }
+        for (String filename : filenames) {
+            locker.deleteFile(filename);
+        }
+        String lockerPathStr = new StringJoiner(File.separator).add(lockerDir).add(lockerName).toString();
+        Path lockerPath = Paths.get(lockerPathStr);
+        try {
+            Files.delete(lockerPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
